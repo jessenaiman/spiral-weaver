@@ -1,0 +1,30 @@
+
+{
+  "partyId": "party-01",
+  "members": [
+    {
+      "id": "char-01",
+      "name": "Elara",
+      "class": "Loremaster",
+      "level": 5
+    },
+    {
+      "id": "char-02",
+      "name": "Bram",
+      "class": "Warden",
+      "level": 6
+    },
+    {
+      "id": "char-03",
+      "name": "Lyra",
+      "class": "Shadowalkwer",
+      "level": 5
+    }
+  ],
+  "affinities": {
+    "Elara-Bram": 3,
+    "Elara-Lyra": 1,
+    "Bram-Lyra": -1
+  },
+  "statusEffects": ["Well-Rested"]
+}

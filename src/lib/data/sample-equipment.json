@@ -1,0 +1,21 @@
+
+[
+  {
+    "itemId": "equip-01",
+    "name": "Whispering Compass",
+    "description": "An ancient brass compass that hums with a faint energy.",
+    "gearTags": ["quest_item", "magical"]
+  },
+  {
+    "itemId": "equip-02",
+    "name": "Warden's Ironwood Shield",
+    "description": "A sturdy shield made from the enchanted ironwood of the Veridian Forest.",
+    "gearTags": ["armor", "defense"]
+  },
+  {
+    "itemId": "equip-03",
+    "name": "Loremaster's Spectacles",
+    "description": "Lenses that occasionally reveal faded text on ancient artifacts.",
+    "gearTags": ["utility", "magical"]
+  }
+]

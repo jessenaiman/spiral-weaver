@@ -1,0 +1,85 @@
+
+{
+  "stories": [
+    {
+      "storyId": "story-01",
+      "title": "The Whispering Compass",
+      "summary": "An ancient compass, said to whisper the path to any truth, falls into the hands of an unlikely group of adventurers. Their quest will take them through forgotten woods and silent cities to uncover a secret that could rewrite history.",
+      "chapters": [
+        {
+          "chapterId": "ch-01",
+          "name": "The Sundered Oak",
+          "synopsis": "The journey begins in the shadow of the Sundered Oak, a landmark where the compass first revealed its powers.",
+          "metadata": { "region": "Veridian Forest" },
+          "arcs": [
+            {
+              "arcId": "arc-1-1",
+              "label": "Whispers in the Wood",
+              "theme": "Discovery and Unease",
+              "moments": [
+                {
+                  "momentId": "m-1-1-1",
+                  "title": "The Compass Awakens",
+                  "narrativeBeats": ["The party huddles around the campfire.", "A strange, melodic hum emanates from the old compass.", "A ghostly light points north into the dark woods."],
+                  "branchingHooks": [],
+                  "sensoryAnchors": ["crackle of fire", "scent of pine", "cool night air"],
+                  "loreRefs": [],
+                  "restrictionTags": ["low_violence"]
+                },
+                {
+                  "momentId": "m-1-1-2",
+                  "title": "The First Step",
+                  "narrativeBeats": ["Following the compass's light, the path becomes overgrown.", "Strange symbols are carved into the trees.", "A sense of being watched settles over the group."],
+                  "branchingHooks": [],
+                  "sensoryAnchors": ["rustling leaves", "damp earth smell", "glowing moss"],
+                  "loreRefs": [],
+                  "restrictionTags": ["low_violence", "mystery"]
+                }
+              ]
+            },
+            {
+              "arcId": "arc-1-2",
+              "label": "The Keeper's Trial",
+              "theme": "Confrontation and Riddles",
+              "moments": [
+                {
+                  "momentId": "m-1-2-1",
+                  "title": "Guardian of the Grove",
+                  "narrativeBeats": ["The path opens into a clearing.", "A figure made of woven branches and leaves blocks the way.", "'To pass, you must answer a riddle,' it rasps."],
+                  "branchingHooks": [],
+                  "sensoryAnchors": ["creaking wood", "voice like rustling leaves", "ancient stones"],
+                  "loreRefs": [],
+                  "restrictionTags": ["puzzle", "no_combat"]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "chapterId": "ch-02",
+          "name": "The Silent City",
+          "synopsis": "The compass leads the party to the sunken ruins of Aeridor, a city that vanished overnight.",
+          "metadata": { "region": "The Sunken Lands" },
+          "arcs": [
+            {
+              "arcId": "arc-2-1",
+              "label": "Echoes of the Past",
+              "theme": "Melancholy and Revelation",
+              "moments": [
+                {
+                  "momentId": "m-2-1-1",
+                  "title": "The Sunken Gates",
+                  "narrativeBeats": ["Towers of shimmering coral and stone rise from the marsh.", "The gates of Aeridor stand agape, eerily silent.", "The compass's light pulses, pulling towards the city center."],
+                  "branchingHooks": [],
+                  "sensoryAnchors": ["sound of dripping water", "smell of salt and decay", "shimmering light on water"],
+                  "loreRefs": [],
+                  "restrictionTags": ["exploration"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
