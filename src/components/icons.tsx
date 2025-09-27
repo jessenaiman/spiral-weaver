@@ -25,4 +25,5 @@ export const Icons = {
   equipment: Swords,
   narrative: ScrollText,
   spinner: Loader,
+  sparkles: Sparkles,
 };
