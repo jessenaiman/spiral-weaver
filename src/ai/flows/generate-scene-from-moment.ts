@@ -25,6 +25,12 @@ export type GenerateSceneFromMomentInput = z.infer<
   typeof GenerateSceneFromMomentInputSchema
 >;
 
+const EquipmentHighlightSchema = z.object({
+  itemId: z.string().describe('The unique ID of the equipment item.'),
+  name: z.string().describe('The name of the equipment item.'),
+  usageNotes: z.string().describe('Notes on how the equipment is being used or is relevant in the scene.'),
+});
+
 const GenerateSceneFromMomentOutputSchema = z.object({
   sceneId: z.string().describe('The unique ID of the generated scene.'),
   title: z.string().describe('The title of the scene.'),
@@ -38,7 +44,7 @@ const GenerateSceneFromMomentOutputSchema = z.object({
     .array(z.string())
     .describe('A list of highlights or notes about the current party.'),
   equipmentHighlights: z
-    .array(z.string())
+    .array(EquipmentHighlightSchema)
     .describe('A list of highlights or notes about the equipment.'),
   branchOptions: z.array(z.any()).describe('A list of branching options for the scene.'),
   diagnostics: z
@@ -71,7 +77,7 @@ Current Mood: {{{currentMood}}}
 
 Create a vivid and dynamic narrative scene that enriches the selected Moment with the provided runtime context. Consider the characters, equipment, and overall mood to generate compelling narrative text, asset hooks, and branching options.
 
-Output a JSON object conforming to the following schema: {{$instructions sceneId, title, narrativeText, mood, assetHooks, recommendedChoices, partyHighlights, equipmentHighlights, branchOptions, diagnostics}}`,
+Output a JSON object conforming to the following schema: {{$instructions}}`,
 });
 
 const generateSceneFromMomentFlow = ai.defineFlow(

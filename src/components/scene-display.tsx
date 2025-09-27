@@ -1,15 +1,15 @@
 'use client';
 
-import type { FormAction } from 'react';
 import type { FormState } from '@/app/actions';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Icons } from './icons';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { useFormStatus } from 'react-dom';
 
 interface SceneDisplayProps {
-  formAction: FormAction<FormState>;
+  formAction: (payload: FormData) => void,
   formState: FormState;
   selectedMoment: { storyId: string; chapterId: string; arcId: string; momentId: string } | null;
 }
@@ -38,9 +38,20 @@ function SceneLoading() {
     );
 }
 
+function SubmitButton({ selectedMoment }: { selectedMoment: SceneDisplayProps['selectedMoment'] }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={!selectedMoment || pending}>
+      <Icons.sparkles className="mr-2 h-4 w-4" />
+      Generate Scene
+    </Button>
+  );
+}
+
+
 export default function SceneDisplay({ formAction, formState, selectedMoment }: SceneDisplayProps) {
   const { data: scene, error } = formState;
-  const { pending } = (formAction as any).__formState;
+  const { pending } = useFormStatus();
 
   return (
     <Card className="h-full flex flex-col">
@@ -58,10 +69,7 @@ export default function SceneDisplay({ formAction, formState, selectedMoment }: 
             <CardTitle className="font-headline text-2xl">{scene?.title ?? 'Scene Display'}</CardTitle>
             <CardDescription>{scene ? `Scene ID: ${scene.sceneId}` : 'The generated scene will appear here.'}</CardDescription>
           </div>
-          <Button type="submit" disabled={!selectedMoment || pending}>
-            <Icons.sparkles className="mr-2 h-4 w-4" />
-            Generate Scene
-          </Button>
+          <SubmitButton selectedMoment={selectedMoment} />
         </CardHeader>
       </form>
 

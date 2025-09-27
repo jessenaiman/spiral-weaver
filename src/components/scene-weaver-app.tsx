@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { generateSceneAction, type FormState } from '@/app/actions';
 import { Story, Chapter, Arc, Moment } from '@/lib/types';
 import {
@@ -28,7 +28,7 @@ const initialState: FormState = {
 };
 
 export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
-  const [formState, formAction] = useFormState(generateSceneAction, initialState);
+  const [formState, formAction] = useActionState(generateSceneAction, initialState);
   const [selectedMoment, setSelectedMoment] = React.useState<{
     storyId: string;
     chapterId: string;
