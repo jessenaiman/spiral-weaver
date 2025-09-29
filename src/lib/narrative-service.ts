@@ -1,42 +1,172 @@
-import { Story, PartySnapshot, EquipmentItem, Chapter, Arc, Moment } from '@/lib/types';
-import narrativeData from './data/sample-narrative.json';
+import { PrismaClient } from '@prisma/client'
+import type { Story, PartySnapshot, EquipmentItem, Chapter, Arc, Moment } from '@/lib/types';
 import partyData from './data/sample-party.json';
 import equipmentData from './data/sample-equipment.json';
 
+const prisma = new PrismaClient();
+
+// Helper to parse JSON fields from the database
+function parseJSONFields(obj: any, fields: string[]) {
+  if (!obj) return obj;
+  const newObj = { ...obj };
+  for (const field of fields) {
+    if (newObj[field] && typeof newObj[field] === 'string') {
+      try {
+        newObj[field] = JSON.parse(newObj[field]);
+      } catch (e) {
+        console.error(`Failed to parse JSON for field ${field}:`, e);
+      }
+    }
+  }
+  return newObj;
+}
+
+
 // This service simulates the ReferenceShelf, LoreCatalog, CharacterLedger, and EquipmentRegistry
 export class ReferenceShelf {
-  private stories: Story[];
   private party: PartySnapshot;
   private equipment: EquipmentItem[];
 
   constructor() {
-    this.stories = narrativeData.stories as Story[];
     this.party = partyData as PartySnapshot;
     this.equipment = equipmentData as EquipmentItem[];
   }
 
-  // Simulates LoreCatalog
+  // Simulates LoreCatalog, now fetching from the database via Prisma
   async getStories(): Promise<Story[]> {
-    return Promise.resolve(this.stories);
+    const stories = await prisma.story.findMany({
+      include: {
+        chapters: {
+          include: {
+            arcs: {
+              include: {
+                moments: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Manually parse JSON string fields
+    return stories.map(story => ({
+      ...story,
+      chapters: story.chapters.map(chapter => {
+        const parsedChapter = parseJSONFields(chapter, ['metadata']);
+        return {
+          ...parsedChapter,
+          arcs: parsedChapter.arcs.map((arc: any) => ({
+            ...arc,
+            moments: arc.moments.map((moment: any) => parseJSONFields(moment, [
+              'timeline',
+              'themes',
+              'lore',
+              'subtext',
+              'narrativeBeats',
+              'branchingHooks',
+              'sensoryAnchors',
+              'loreRefs',
+              'restrictionTags'
+            ])),
+          })),
+        }
+      }),
+    })) as unknown as Story[];
   }
 
   async getStory(storyId: string): Promise<Story | undefined> {
-    return Promise.resolve(this.stories.find(s => s.storyId === storyId));
+    const story = await prisma.story.findUnique({
+      where: { storyId },
+      include: {
+        chapters: {
+          include: {
+            arcs: {
+              include: {
+                moments: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!story) return undefined;
+
+    const parsedStory = {
+      ...story,
+      chapters: story.chapters.map(chapter => {
+        const parsedChapter = parseJSONFields(chapter, ['metadata']);
+        return {
+          ...parsedChapter,
+          arcs: parsedChapter.arcs.map((arc: any) => ({
+            ...arc,
+            moments: arc.moments.map((moment: any) => parseJSONFields(moment, [
+              'timeline',
+              'themes',
+              'lore',
+              'subtext',
+              'narrativeBeats',
+              'branchingHooks',
+              'sensoryAnchors',
+              'loreRefs',
+              'restrictionTags'
+            ])),
+          })),
+        }
+      }),
+    }
+    return parsedStory as unknown as Story;
   }
 
   async getChapter(storyId: string, chapterId: string): Promise<Chapter | undefined> {
-    const story = await this.getStory(storyId);
-    return Promise.resolve(story?.chapters.find(c => c.chapterId === chapterId));
+    const chapter = await prisma.chapter.findUnique({
+      where: { chapterId },
+    });
+    return parseJSONFields(chapter, ['metadata']) as unknown as Chapter;
   }
 
   async getArc(storyId: string, chapterId: string, arcId: string): Promise<Arc | undefined> {
-    const chapter = await this.getChapter(storyId, chapterId);
-    return Promise.resolve(chapter?.arcs.find(a => a.arcId === arcId));
+     const arc = await prisma.arc.findUnique({
+      where: { arcId },
+       include: {
+         moments: true
+       }
+    });
+
+    if (!arc) return undefined;
+
+    const parsedArc = {
+        ...arc,
+        moments: arc.moments.map((moment: any) => parseJSONFields(moment, [
+          'timeline',
+          'themes',
+          'lore',
+          'subtext',
+          'narrativeBeats',
+          'branchingHooks',
+          'sensoryAnchors',
+          'loreRefs',
+          'restrictionTags'
+        ])),
+    }
+    return parsedArc as unknown as Arc;
   }
 
   async getMoment(storyId: string, chapterId: string, arcId: string, momentId: string): Promise<Moment | undefined> {
-    const arc = await this.getArc(storyId, chapterId, arcId);
-    return Promise.resolve(arc?.moments.find(m => m.momentId === momentId));
+    const moment = await prisma.moment.findUnique({
+      where: { momentId },
+    });
+     return parseJSONFields(moment, [
+      'timeline',
+      'themes',
+      'lore',
+      'subtext',
+      'narrativeBeats',
+      'branchingHooks',
+      'sensoryAnchors',
+      'loreRefs',
+      'restrictionTags'
+    ]) as unknown as Moment;
   }
 
   // Simulates CharacterLedger
