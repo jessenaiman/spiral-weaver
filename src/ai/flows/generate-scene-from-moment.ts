@@ -83,7 +83,7 @@ const prompt = ai.definePrompt({
 The core content of the moment is:
 "{{{content}}}"
 
-This content is the source of truth. Your main task is to generate the surrounding details based on the game context.
+This content is the source of truth. Your main task is to generate the surrounding details based on the game context. The 'narrativeText' you output should be a creative expansion and enrichment of the provided moment content, not just a copy.
 
 Game Context:
 - Chapter ID: {{{chapterId}}}
@@ -93,7 +93,7 @@ Game Context:
 - Environment: {{{environmentState}}}
 - Current Mood: {{{currentMood}}}
 
-Based on all this information, generate a compelling scene. Define a clear title, determine the resulting mood, and create relevant highlights and branching options. The "narrativeText" you output should be a creative expansion and enrichment of the provided moment content, not just a copy.
+Based on all this information, generate a compelling scene. Define a clear title, determine the resulting mood, and create relevant highlights and branching options.
 
 Output a JSON object conforming to the following schema: {{$instructions}}`,
 });
@@ -109,3 +109,5 @@ const generateSceneFromMomentFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    

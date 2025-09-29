@@ -26,12 +26,12 @@ export class SceneAssembler {
     
     const sceneDescriptor = await generateSceneFromMoment(sceneInput);
     
-    // The narrative text should be the raw content from the moment, which the AI expands upon.
-    // We set it here to ensure it's not just the AI's version.
-    // The AI's expansion is still in `sceneDescriptor.narrativeText` but we overwrite it
-    // for this implementation.
+    // The AI's expansion is in `sceneDescriptor.narrativeText`, but for this implementation
+    // we ensure the primary narrative text is the original content from the moment.
     sceneDescriptor.narrativeText = moment.content;
     
     return sceneDescriptor;
   }
 }
+
+    

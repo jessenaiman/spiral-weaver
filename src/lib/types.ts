@@ -122,3 +122,5 @@ export interface SceneDeskViewModel {
   currentScene?: SceneDescriptor;
   diagnostics?: SceneDiagnostics;
 }
+
+    
