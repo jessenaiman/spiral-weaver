@@ -9,14 +9,15 @@ import { Label } from '@/components/ui/label';
 import { Icons } from './icons';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
+import { SelectedItem } from './scene-weaver-app';
 
 interface NarrativeBrowserProps {
   story: Story;
-  onSelectMoment: (selection: { storyId: string; chapterId: string; arcId: string; momentId: string }) => void;
-  selectedMomentId: string | null;
+  onSelect: (selection: SelectedItem) => void;
+  selectedItemId: string | null;
 }
 
-export default function NarrativeBrowser({ story, onSelectMoment, selectedMomentId }: NarrativeBrowserProps) {
+export default function NarrativeBrowser({ story, onSelect, selectedItemId }: NarrativeBrowserProps) {
   return (
     <div className="flex flex-col h-full p-2 gap-4 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:items-center">
       <div className="px-2 group-data-[collapsible=icon]:hidden">
@@ -36,17 +37,29 @@ export default function NarrativeBrowser({ story, onSelectMoment, selectedMoment
       </div>
 
       <div className="px-2 group-data-[collapsible=icon]:hidden">
-        <div className="flex items-center gap-2 text-sm font-medium">
+        <button
+          onClick={() => onSelect({ type: 'story', data: story })}
+          className={cn(
+            "w-full text-left p-2 rounded-md flex items-center gap-2 hover:bg-accent transition-colors font-semibold",
+            selectedItemId === story.id && "bg-accent text-accent-foreground"
+          )}
+        >
           <Icons.story />
-          Narrative
-        </div>
+          {story.title}
+        </button>
       </div>
       
       <ScrollArea className="flex-1 group-data-[collapsible=icon]:hidden">
         <Accordion type="multiple" className="w-full px-2">
           {story.chapters.map((chapter) => (
-            <AccordionItem value={chapter.chapterId} key={chapter.chapterId}>
-              <AccordionTrigger className="font-semibold text-base">
+            <AccordionItem value={chapter.id} key={chapter.id}>
+              <AccordionTrigger 
+                className={cn(
+                  "font-semibold text-base -ml-2 p-2 rounded-md hover:bg-accent transition-colors",
+                  selectedItemId === chapter.id && "bg-accent text-accent-foreground"
+                )}
+                onClick={() => onSelect({ type: 'chapter', data: chapter })}
+              >
                 <div className="flex items-center gap-2">
                   <Icons.chapter className="text-muted-foreground" />
                   {chapter.name}
@@ -55,8 +68,14 @@ export default function NarrativeBrowser({ story, onSelectMoment, selectedMoment
               <AccordionContent>
                 <Accordion type="multiple" className="pl-4">
                   {chapter.arcs.map((arc) => (
-                    <AccordionItem value={arc.arcId} key={arc.arcId}>
-                      <AccordionTrigger>
+                    <AccordionItem value={arc.id} key={arc.id}>
+                      <AccordionTrigger
+                        onClick={() => onSelect({ type: 'arc', data: arc })}
+                        className={cn(
+                          "p-2 -ml-2 rounded-md hover:bg-accent transition-colors",
+                          selectedItemId === arc.id && "bg-accent text-accent-foreground"
+                        )}
+                      >
                         <div className="flex items-center gap-2">
                           <Icons.arc className="text-muted-foreground" />
                           {arc.label}
@@ -65,17 +84,12 @@ export default function NarrativeBrowser({ story, onSelectMoment, selectedMoment
                       <AccordionContent className="pl-4">
                         <ul className="space-y-1">
                           {arc.moments.map((moment) => (
-                            <li key={moment.momentId}>
+                            <li key={moment.id}>
                               <button
-                                onClick={() => onSelectMoment({
-                                  storyId: story.storyId,
-                                  chapterId: chapter.chapterId,
-                                  arcId: arc.arcId,
-                                  momentId: moment.momentId,
-                                })}
+                                onClick={() => onSelect({ type: 'moment', data: moment })}
                                 className={cn(
                                   "w-full text-left p-2 rounded-md flex items-center gap-2 hover:bg-accent transition-colors",
-                                  selectedMomentId === moment.momentId && "bg-accent text-accent-foreground"
+                                  selectedItemId === moment.id && "bg-accent text-accent-foreground"
                                 )}
                               >
                                 <Icons.moment className="text-primary h-4 w-4" />

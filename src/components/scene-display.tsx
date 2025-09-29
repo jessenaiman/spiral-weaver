@@ -9,22 +9,24 @@ import { Separator } from './ui/separator';
 import { useFormStatus } from 'react-dom';
 import { Moment } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { SelectedItem } from './scene-weaver-app';
+import NarrativeContentDisplay from './narrative-content-display';
 
 interface SceneDisplayProps {
   formAction: (payload: FormData) => void;
   formState: FormState;
-  selectedMoment: { storyId: string; chapterId: string; arcId: string; momentId: string } | null;
-  onSelectMoment: (selection: { storyId: string; chapterId: string; arcId: string; momentId: string }) => void;
-  moments: Moment[]; // Add moments to props
+  selectedItem: SelectedItem | null;
+  onSelectMoment: (moment: Moment) => void;
+  moments: Moment[];
 }
 
 function ScenePlaceholder() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg">
       <Icons.narrative className="h-12 w-12 text-muted-foreground" />
-      <h3 className="mt-4 text-lg font-semibold">Select a Moment</h3>
+      <h3 className="mt-4 text-lg font-semibold">Select an Item</h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        Choose a moment from the narrative browser on the left and click 'Generate Scene' to begin.
+        Choose a story, chapter, arc, or moment from the narrative browser on the left to see its details.
       </p>
     </div>
   );
@@ -42,39 +44,33 @@ function SceneLoading() {
   );
 }
 
-function SubmitButton({ selectedMoment }: { selectedMoment: SceneDisplayProps['selectedMoment'] }) {
+function SubmitButton({ selectedItem }: { selectedItem: SceneDisplayProps['selectedItem'] }) {
   const { pending } = useFormStatus();
+  const isMoment = selectedItem?.type === 'moment';
   return (
-    <Button type="submit" disabled={!selectedMoment || pending}>
+    <Button type="submit" disabled={!isMoment || pending}>
       <Icons.sparkles className="mr-2 h-4 w-4" />
       Generate Scene
     </Button>
   );
 }
 
-export default function SceneDisplay({ formAction, formState, selectedMoment, onSelectMoment, moments }: SceneDisplayProps) {
+export default function SceneDisplay({ formAction, formState, selectedItem, onSelectMoment, moments }: SceneDisplayProps) {
   const { data: scene, error } = formState;
   const { pending } = useFormStatus();
-
-  const currentMoment = selectedMoment ? moments.find(m => m.momentId === selectedMoment.momentId) : null;
   
-  const handleBranchClick = (targetMomentId: string) => {
-    // Find the full details of the target moment to get its chapter and arc
-    const targetMoment = moments.find(m => m.momentId === targetMomentId);
-    if (targetMoment && selectedMoment) {
-      onSelectMoment({
-        storyId: selectedMoment.storyId,
-        chapterId: targetMoment.chapterId,
-        arcId: targetMoment.arcId,
-        momentId: targetMoment.momentId
-      });
+  const currentMoment = selectedItem?.type === 'moment' ? selectedItem.data : null;
 
-      // Automatically trigger form submission for the new moment
+  const handleBranchClick = (targetMomentId: string) => {
+    const targetMoment = moments.find(m => m.id === targetMomentId);
+    if (targetMoment) {
+      onSelectMoment(targetMoment);
+
       setTimeout(() => {
         const form = document.getElementById('scene-generation-form') as HTMLFormElement;
         if (form) {
             const formData = new FormData(form);
-            formData.set('momentId', targetMomentId);
+            formData.set('momentId', targetMoment.id);
             formData.set('chapterId', targetMoment.chapterId);
             formData.set('arcId', targetMoment.arcId);
             formAction(formData);
@@ -86,20 +82,20 @@ export default function SceneDisplay({ formAction, formState, selectedMoment, on
   return (
     <Card className="h-full flex flex-col">
       <form id="scene-generation-form" action={formAction}>
-        {selectedMoment && (
+        {currentMoment && (
           <>
-            <input type="hidden" name="storyId" value={selectedMoment.storyId} />
-            <input type="hidden" name="chapterId" value={selectedMoment.chapterId} />
-            <input type="hidden" name="arcId" value={selectedMoment.arcId} />
-            <input type="hidden" name="momentId" value={selectedMoment.momentId} />
+            <input type="hidden" name="storyId" value={currentMoment.storyId} />
+            <input type="hidden" name="chapterId" value={currentMoment.chapterId} />
+            <input type="hidden" name="arcId" value={currentMoment.arcId} />
+            <input type="hidden" name="momentId" value={currentMoment.id} />
           </>
         )}
         <CardHeader className="flex-row items-start justify-between">
           <div>
-            <CardTitle className="font-headline text-2xl">{scene?.title ?? 'Scene Display'}</CardTitle>
+            <CardTitle className="font-headline text-2xl">{scene?.title ?? selectedItem?.data.title ?? 'Scene Display'}</CardTitle>
             <CardDescription>{scene ? `Scene ID: ${scene.sceneId}` : 'The generated scene will appear here.'}</CardDescription>
           </div>
-          <SubmitButton selectedMoment={selectedMoment} />
+          <SubmitButton selectedItem={selectedItem} />
         </CardHeader>
       </form>
 
@@ -107,15 +103,12 @@ export default function SceneDisplay({ formAction, formState, selectedMoment, on
         {error && <div className="text-destructive p-4 bg-destructive/10 rounded-md">{error}</div>}
         
         {pending ? (
-            <SceneLoading />
-        ) : !scene ? (
-            <ScenePlaceholder />
-        ) : (
+          <SceneLoading />
+        ) : scene ? (
           <Tabs defaultValue="narrative" className="w-full">
             <TabsList>
               <TabsTrigger value="narrative">Narrative</TabsTrigger>
               <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="context">Context</TabsTrigger>
             </TabsList>
             <TabsContent value="narrative" className="space-y-6 mt-4">
               <div>
@@ -141,7 +134,6 @@ export default function SceneDisplay({ formAction, formState, selectedMoment, on
                   </div>
                 </>
               )}
-
             </TabsContent>
             <TabsContent value="details" className="space-y-6 mt-4">
                <div>
@@ -152,9 +144,7 @@ export default function SceneDisplay({ formAction, formState, selectedMoment, on
                     </ul>
                   ) : <p className="text-muted-foreground text-sm">No specific party highlights.</p>}
                 </div>
-
                 <Separator />
-
                  <div>
                   <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.equipment /> Equipment Highlights</h4>
                   {scene.equipmentHighlights.length > 0 ? (
@@ -164,45 +154,13 @@ export default function SceneDisplay({ formAction, formState, selectedMoment, on
                   ) : <p className="text-muted-foreground text-sm">No specific equipment highlights.</p>}
                 </div>
             </TabsContent>
-             <TabsContent value="context" className="space-y-4 mt-4 text-sm">
-                {currentMoment?.timeline && (
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-2">Timeline</h4>
-                    <ul className="list-decimal list-inside text-muted-foreground space-y-1">
-                      {currentMoment.timeline.map((item, i) => <li key={i}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-                 {currentMoment?.themes && (
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-2">Themes</h4>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      {currentMoment.themes.map((item, i) => <li key={i}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-                 {currentMoment?.lore && (
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-2">Lore</h4>
-                     <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      {currentMoment.lore.map((item, i) => <li key={i}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-                 {currentMoment?.subtext && (
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-2">Subtext</h4>
-                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                      {currentMoment.subtext.map((item, i) => <li key={i}>{item}</li>)}
-                    </ul>
-                  </div>
-                )}
-              </TabsContent>
           </Tabs>
+        ) : selectedItem ? (
+           <NarrativeContentDisplay item={selectedItem} />
+        ) : (
+          <ScenePlaceholder />
         )}
       </CardContent>
     </Card>
   );
 }
-
-    

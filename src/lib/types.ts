@@ -13,7 +13,7 @@ export interface BranchingHook {
 }
 
 export interface Moment {
-  momentId: string;
+  id: string;
   title: string;
   content: string; // Replaces narrativeBeats
   timeline: string[];
@@ -27,25 +27,31 @@ export interface Moment {
   // Added for easy lookup
   arcId: string;
   chapterId: string;
+  storyId: string;
 }
 
 export interface Arc {
-  arcId: string;
+  id: string;
   label: string;
   theme: string;
   moments: Moment[];
+  title: string; // for display
+  chapterId: string;
+  storyId: string;
 }
 
 export interface Chapter {
-  chapterId: string;
+  id: string;
   name: string;
   synopsis: string;
   arcs: Arc[];
   metadata: Record<string, any>;
+  title: string; // for display
+  storyId: string;
 }
 
 export interface Story {
-  storyId: string;
+  id: string;
   title: string;
   summary: string;
   chapters: Chapter[];
@@ -111,6 +117,7 @@ export interface RuntimeContext {
   momentId: string;
   partySnapshot: PartySnapshot;
   environmentState: string;
+  currentMood: string;
 }
 
 // 1.3 Demo Flow
@@ -122,5 +129,3 @@ export interface SceneDeskViewModel {
   currentScene?: SceneDescriptor;
   diagnostics?: SceneDiagnostics;
 }
-
-    

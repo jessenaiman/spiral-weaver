@@ -18,7 +18,7 @@ export class ReferenceShelf {
   // Helper to add chapterId and arcId to each moment for easier lookup and to reconstruct the story object
   private processStoryData(storyData: any): Story {
       const story: Story = {
-        storyId: storyData.storyId,
+        id: storyData.storyId,
         title: storyData.title,
         summary: storyData.summary,
         chapters: [],
@@ -26,21 +26,33 @@ export class ReferenceShelf {
 
       story.chapters = storyData.chapters.map((chapterData: any) => {
           const chapter: Chapter = {
-              ...chapterData,
+              id: chapterData.chapterId,
+              name: chapterData.name,
+              synopsis: chapterData.synopsis,
+              metadata: chapterData.metadata,
+              title: chapterData.name,
+              storyId: story.id,
               arcs: [],
           };
 
           chapter.arcs = chapterData.arcs.map((arcData: any) => {
               const arc: Arc = {
-                  ...arcData,
+                  id: arcData.arcId,
+                  label: arcData.label,
+                  theme: arcData.theme,
+                  title: arcData.label,
+                  chapterId: chapter.id,
+                  storyId: story.id,
                   moments: [],
               };
               
               arc.moments = arcData.moments.map((momentData: any) => {
                   return {
                       ...momentData,
-                      chapterId: chapter.chapterId,
-                      arcId: arc.arcId,
+                      id: momentData.momentId,
+                      arcId: arc.id,
+                      chapterId: chapter.id,
+                      storyId: story.id,
                   };
               });
               return arc;
@@ -56,7 +68,7 @@ export class ReferenceShelf {
   }
 
   async getStory(storyId: string): Promise<Story | undefined> {
-    if (this.story.storyId === storyId) {
+    if (this.story.id === storyId) {
       return Promise.resolve(this.story);
     }
     return Promise.resolve(undefined);
@@ -64,17 +76,17 @@ export class ReferenceShelf {
 
   async getChapter(storyId: string, chapterId: string): Promise<Chapter | undefined> {
     const story = await this.getStory(storyId);
-    return Promise.resolve(story?.chapters.find(c => c.chapterId === chapterId));
+    return Promise.resolve(story?.chapters.find(c => c.id === chapterId));
   }
 
   async getArc(storyId: string, chapterId: string, arcId: string): Promise<Arc | undefined> {
     const chapter = await this.getChapter(storyId, chapterId);
-    return Promise.resolve(chapter?.arcs.find(a => a.arcId === arcId));
+    return Promise.resolve(chapter?.arcs.find(a => a.id === arcId));
   }
 
   async getMoment(storyId: string, chapterId: string, arcId: string, momentId: string): Promise<Moment | undefined> {
     const arc = await this.getArc(storyId, chapterId, arcId);
-    return Promise.resolve(arc?.moments.find(m => m.momentId === momentId));
+    return Promise.resolve(arc?.moments.find(m => m.id === momentId));
   }
 
   // Simulates CharacterLedger

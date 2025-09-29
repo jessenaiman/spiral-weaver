@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useActionState } from 'react';
 import { generateSceneAction, type FormState } from '@/app/actions';
-import { Story, Moment } from '@/lib/types';
+import { Story, Moment, Chapter, Arc } from '@/lib/types';
 import {
   SidebarProvider,
   Sidebar,
@@ -27,17 +27,34 @@ const initialState: FormState = {
   error: null,
 };
 
+export type SelectedItem = 
+  | { type: 'story'; data: Story }
+  | { type: 'chapter'; data: Chapter }
+  | { type: 'arc'; data: Arc }
+  | { type: 'moment'; data: Moment };
+
+
 export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   const [formState, formAction] = useActionState(generateSceneAction, initialState);
-  const [selectedMoment, setSelectedMoment] = React.useState<{
-    storyId: string;
-    chapterId: string;
-    arcId: string;
-    momentId: string;
-  } | null>(null);
+  const [selectedItem, setSelectedItem] = React.useState<SelectedItem | null>(null);
 
   const story = stories[0]; // Assuming one story for the demo
   const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.chapterId, arcId: a.arcId}))));
+
+  const selectedMoment = selectedItem?.type === 'moment' ? selectedItem.data : null;
+
+  const handleSelectMoment = (moment: Moment) => {
+    setSelectedItem({ type: 'moment', data: moment });
+  };
+  
+  const handleSelect = (item: SelectedItem) => {
+    setSelectedItem(item);
+    // Clear the generated scene when a new item is selected
+    if (initialState.data) {
+        initialState.data = null;
+        initialState.error = null;
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -51,8 +68,8 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
         <SidebarContent>
           <NarrativeBrowser 
             story={story}
-            onSelectMoment={setSelectedMoment}
-            selectedMomentId={selectedMoment?.momentId}
+            onSelect={handleSelect}
+            selectedItemId={selectedItem?.data.id}
           />
         </SidebarContent>
       </Sidebar>
@@ -70,8 +87,8 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
             <SceneDisplay 
               formAction={formAction}
               formState={formState}
-              selectedMoment={selectedMoment}
-              onSelectMoment={setSelectedMoment}
+              selectedItem={selectedItem}
+              onSelectMoment={handleSelectMoment}
               moments={allMoments}
             />
           </div>
