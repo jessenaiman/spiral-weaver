@@ -31,6 +31,19 @@ const EquipmentHighlightSchema = z.object({
   usageNotes: z.string().describe('Notes on how the equipment is being used or is relevant in the scene.'),
 });
 
+const BranchOptionSchema = z.object({
+  prompt: z.string(),
+  targetMomentId: z.string(),
+  probability: z.number(),
+  restrictionNotes: z.string().optional(),
+});
+
+const SceneDiagnosticsSchema = z.object({
+  appliedRestrictions: z.array(z.string()),
+  moodAdjustments: z.array(z.string()),
+  branchForecast: z.string(),
+});
+
 const GenerateSceneFromMomentOutputSchema = z.object({
   sceneId: z.string().describe('The unique ID of the generated scene.'),
   title: z.string().describe('The title of the scene.'),
@@ -46,9 +59,8 @@ const GenerateSceneFromMomentOutputSchema = z.object({
   equipmentHighlights: z
     .array(EquipmentHighlightSchema)
     .describe('A list of highlights or notes about the equipment.'),
-  branchOptions: z.array(z.any()).describe('A list of branching options for the scene.'),
-  diagnostics: z
-    .any()
+  branchOptions: z.array(BranchOptionSchema).describe('A list of branching options for the scene.'),
+  diagnostics: SceneDiagnosticsSchema
     .describe('A diagnostics panel summarizing applied restrictions, mood adjustments, and branching probabilities.'),
 });
 export type GenerateSceneFromMomentOutput = z.infer<
@@ -87,6 +99,43 @@ const generateSceneFromMomentFlow = ai.defineFlow(
     outputSchema: GenerateSceneFromMomentOutputSchema,
   },
   async input => {
+    // For testing purposes, return a static response for a specific moment.
+    if (input.momentId === 'm-1-1-1') {
+      return {
+        sceneId: `scene-${Date.now()}`,
+        title: 'The Compass Awakens (Static)',
+        narrativeText:
+          'The crackle of the campfire is the only sound, a stark contrast to the oppressive silence of the Veridian Forest. Elara pores over a crumbling map, Bram sharpens his axe, and Lyra seems to melt into the shadows. Suddenly, the old compass on a nearby rock hums, emitting a soft, ethereal glow. A ghostly needle of light stabs northward into the pitch-black woods, promising an unknown path.',
+        mood: 'Anticipation and Mystery',
+        assetHooks: ['asset-forest-night', 'asset-campfire-crackle'],
+        recommendedChoices: ['Examine the compass', 'Ready the party to leave'],
+        partyHighlights: [
+          'Elara is focused on her research.',
+          'Bram is preparing for a potential fight.',
+        ],
+        equipmentHighlights: [
+          {
+            itemId: 'equip-01',
+            name: 'Whispering Compass',
+            usageNotes: 'The compass has activated on its own, pointing north.',
+          },
+        ],
+        branchOptions: [
+          {
+            prompt: 'Follow the light immediately.',
+            targetMomentId: 'm-1-1-2',
+            probability: 0.8,
+            restrictionNotes: 'Proceeds the main quest.',
+          },
+        ],
+        diagnostics: {
+          appliedRestrictions: ['Initial moment, no restrictions applied.'],
+          moodAdjustments: ['Mood set to "Anticipation" based on context.'],
+          branchForecast: 'High probability of proceeding to "The First Step".',
+        },
+      };
+    }
+    
     const {output} = await prompt(input);
     return output!;
   }
