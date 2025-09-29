@@ -2,9 +2,10 @@
 
 import { generateSceneFromMoment } from '@/ai/flows/generate-scene-from-moment';
 import { applyRestrictionsToScene } from '@/ai/flows/apply-restrictions-to-scene';
-import { ReferenceShelf } from '@/lib/narrative-service';
+import { DreamweaverDirector } from '@/lib/dreamweaver-director';
 import type { SceneDescriptor } from '@/lib/types';
 import { z } from 'zod';
+import { NarrativeJournal } from '@/lib/narrative-journal';
 
 const formSchema = z.object({
   storyId: z.string(),
@@ -32,42 +33,44 @@ export async function generateSceneAction(
     
     const { storyId, chapterId, arcId, momentId, restrictions } = parsed.data;
 
-    const referenceShelf = new ReferenceShelf();
-    const partySnapshot = await referenceShelf.snapshotParty();
-    const moment = await referenceShelf.getMoment(storyId, chapterId, arcId, momentId);
+    const director = new DreamweaverDirector();
+    const journal = new NarrativeJournal();
+
+    const moment = await director.referenceShelf.getMoment(storyId, chapterId, arcId, momentId);
 
     if (!moment) {
       return { data: null, error: 'Selected moment not found.' };
     }
     
     // Step 1: Generate the initial scene from the moment and runtime context.
+    const partySnapshot = await director.referenceShelf.snapshotParty();
     const sceneInput = {
       momentId: moment.momentId,
+      content: moment.content,
       chapterId,
       arcId,
       partySnapshot,
       environmentState: "Calm, early evening",
-      currentMood: "Anticipation",
+      currentMood: director.moodEngine.getCurrentMood(),
     };
     
     let sceneDescriptor = await generateSceneFromMoment(sceneInput);
 
-    // Step 2: If restrictions are provided, apply them to the generated scene.
-    if (restrictions) {
-      const restrictionInput = {
-        sceneContent: sceneDescriptor.narrativeText,
-        restrictions: restrictions,
-      };
-      
-      const filteredResult = await applyRestrictionsToScene(restrictionInput);
-      
-      // Update the scene with the filtered content and add to diagnostics
-      sceneDescriptor.narrativeText = filteredResult.filteredContent;
-      sceneDescriptor.diagnostics.appliedRestrictions = [
-        ...(sceneDescriptor.diagnostics.appliedRestrictions || []), 
-        `User-defined: "${restrictions}"`
-      ];
-    }
+    // Step 2: Apply restrictions (both built-in and user-defined)
+    const restrictionInput = {
+      sceneContent: sceneDescriptor.narrativeText,
+      moment, // Pass the full moment
+      userRestrictions: restrictions,
+    };
+    
+    const filteredResult = await applyRestrictionsToScene(restrictionInput);
+    
+    // Update the scene with the filtered content and add to diagnostics
+    sceneDescriptor.narrativeText = filteredResult.filteredContent;
+    sceneDescriptor.diagnostics.appliedRestrictions = filteredResult.appliedRestrictions;
+
+    // Step 3: Log the scene to the journal
+    journal.logScene(sceneDescriptor);
     
     return { data: sceneDescriptor, error: null };
 

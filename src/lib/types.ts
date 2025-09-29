@@ -24,6 +24,9 @@ export interface Moment {
   sensoryAnchors: string[];
   loreRefs: LoreReference[];
   restrictionTags: string[];
+  // Added for easy lookup
+  arcId: string;
+  chapterId: string;
 }
 
 export interface Arc {

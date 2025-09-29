@@ -7,35 +7,39 @@ import { Icons } from './icons';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { useFormStatus } from 'react-dom';
+import { Moment } from '@/lib/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface SceneDisplayProps {
-  formAction: (payload: FormData) => void,
+  formAction: (payload: FormData) => void;
   formState: FormState;
   selectedMoment: { storyId: string; chapterId: string; arcId: string; momentId: string } | null;
+  onSelectMoment: (selection: { storyId: string; chapterId: string; arcId: string; momentId: string }) => void;
+  moments: Moment[]; // Add moments to props
 }
 
 function ScenePlaceholder() {
-    return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg">
-            <Icons.narrative className="h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">Select a Moment</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-                Choose a moment from the narrative browser on the left and click 'Generate Scene' to begin.
-            </p>
-        </div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg">
+      <Icons.narrative className="h-12 w-12 text-muted-foreground" />
+      <h3 className="mt-4 text-lg font-semibold">Select a Moment</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Choose a moment from the narrative browser on the left and click 'Generate Scene' to begin.
+      </p>
+    </div>
+  );
 }
 
 function SceneLoading() {
-     return (
-        <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg animate-pulse">
-            <Icons.spinner className="h-12 w-12 text-primary animate-spin" />
-            <h3 className="mt-4 text-lg font-semibold">Weaving the narrative...</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-                The Dreamweaver is assembling your scene. This might take a moment.
-            </p>
-        </div>
-    );
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg animate-pulse">
+      <Icons.spinner className="h-12 w-12 text-primary animate-spin" />
+      <h3 className="mt-4 text-lg font-semibold">Weaving the narrative...</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        The Dreamweaver is assembling your scene. This might take a moment.
+      </p>
+    </div>
+  );
 }
 
 function SubmitButton({ selectedMoment }: { selectedMoment: SceneDisplayProps['selectedMoment'] }) {
@@ -48,10 +52,36 @@ function SubmitButton({ selectedMoment }: { selectedMoment: SceneDisplayProps['s
   );
 }
 
-
-export default function SceneDisplay({ formAction, formState, selectedMoment }: SceneDisplayProps) {
+export default function SceneDisplay({ formAction, formState, selectedMoment, onSelectMoment, moments }: SceneDisplayProps) {
   const { data: scene, error } = formState;
   const { pending } = useFormStatus();
+
+  const currentMoment = selectedMoment ? moments.find(m => m.momentId === selectedMoment.momentId) : null;
+  
+  const handleBranchClick = (targetMomentId: string) => {
+    // Find the full details of the target moment to get its chapter and arc
+    const targetMoment = moments.find(m => m.momentId === targetMomentId);
+    if (targetMoment && selectedMoment) {
+      onSelectMoment({
+        storyId: selectedMoment.storyId,
+        chapterId: targetMoment.chapterId,
+        arcId: targetMoment.arcId,
+        momentId: targetMoment.momentId
+      });
+
+      // Automatically trigger form submission for the new moment
+      setTimeout(() => {
+        const form = document.getElementById('scene-generation-form') as HTMLFormElement;
+        if (form) {
+            const formData = new FormData(form);
+            formData.set('momentId', targetMomentId);
+            formData.set('chapterId', targetMoment.chapterId);
+            formData.set('arcId', targetMoment.arcId);
+            formAction(formData);
+        }
+      }, 0);
+    }
+  };
 
   return (
     <Card className="h-full flex flex-col">
@@ -81,40 +111,94 @@ export default function SceneDisplay({ formAction, formState, selectedMoment }: 
         ) : !scene ? (
             <ScenePlaceholder />
         ) : (
-          <div className="space-y-6">
-            <div>
-              <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.narrative /> Narrative Text</h4>
-              <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{scene.narrativeText}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div><Badge variant="outline">Mood: {scene.mood}</Badge></div>
-              <div><Badge variant="outline">Choices: {scene.recommendedChoices.join(', ') || 'None'}</Badge></div>
-            </div>
+          <Tabs defaultValue="narrative" className="w-full">
+            <TabsList>
+              <TabsTrigger value="narrative">Narrative</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="context">Context</TabsTrigger>
+            </TabsList>
+            <TabsContent value="narrative" className="space-y-6 mt-4">
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.narrative /> Narrative Text</h4>
+                <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{scene.narrativeText}</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><Badge variant="outline">Mood: {scene.mood}</Badge></div>
+              </div>
+              
+               {scene.branchOptions && scene.branchOptions.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.chapter /> Branch Options</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {scene.branchOptions.map((option, i) => (
+                         <Button key={i} variant="outline" size="sm" onClick={() => handleBranchClick(option.targetMomentId)}>
+                          {option.prompt}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
-            <Separator />
-            
-            <div>
-              <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.party /> Party Highlights</h4>
-              {scene.partyHighlights.length > 0 ? (
-                <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
-                    {scene.partyHighlights.map((highlight, i) => <li key={i}>{highlight}</li>)}
-                </ul>
-              ) : <p className="text-muted-foreground text-sm">No specific party highlights.</p>}
-            </div>
+            </TabsContent>
+            <TabsContent value="details" className="space-y-6 mt-4">
+               <div>
+                  <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.party /> Party Highlights</h4>
+                  {scene.partyHighlights.length > 0 ? (
+                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
+                        {scene.partyHighlights.map((highlight, i) => <li key={i}>{highlight}</li>)}
+                    </ul>
+                  ) : <p className="text-muted-foreground text-sm">No specific party highlights.</p>}
+                </div>
 
-            <Separator />
+                <Separator />
 
-             <div>
-              <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.equipment /> Equipment Highlights</h4>
-              {scene.equipmentHighlights.length > 0 ? (
-                <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
-                    {scene.equipmentHighlights.map((item, i) => <li key={i}><b>{item.name}:</b> {item.usageNotes}</li>)}
-                </ul>
-              ) : <p className="text-muted-foreground text-sm">No specific equipment highlights.</p>}
-            </div>
-
-          </div>
+                 <div>
+                  <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.equipment /> Equipment Highlights</h4>
+                  {scene.equipmentHighlights.length > 0 ? (
+                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
+                        {scene.equipmentHighlights.map((item, i) => <li key={i}><b>{item.name}:</b> {item.usageNotes}</li>)}
+                    </ul>
+                  ) : <p className="text-muted-foreground text-sm">No specific equipment highlights.</p>}
+                </div>
+            </TabsContent>
+             <TabsContent value="context" className="space-y-4 mt-4 text-sm">
+                {currentMoment?.timeline && (
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-2">Timeline</h4>
+                    <ul className="list-decimal list-inside text-muted-foreground space-y-1">
+                      {currentMoment.timeline.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                 {currentMoment?.themes && (
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-2">Themes</h4>
+                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                      {currentMoment.themes.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                 {currentMoment?.lore && (
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-2">Lore</h4>
+                     <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                      {currentMoment.lore.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+                 {currentMoment?.subtext && (
+                  <div>
+                    <h4 className="font-semibold flex items-center gap-2 mb-2">Subtext</h4>
+                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                      {currentMoment.subtext.map((item, i) => <li key={i}>{item}</li>)}
+                    </ul>
+                  </div>
+                )}
+              </TabsContent>
+          </Tabs>
         )}
       </CardContent>
     </Card>

@@ -10,18 +10,21 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { Moment } from '@/lib/types';
 import {z} from 'genkit';
 
 // Define the input schema for the ApplyRestrictionsToScene flow
 const ApplyRestrictionsToSceneInputSchema = z.object({
   sceneContent: z.string().describe('The original scene content to be filtered.'),
-  restrictions: z.string().describe('The content restrictions or guardrails to apply.'),
+  moment: z.any().describe('The Moment object containing restriction tags.'),
+  userRestrictions: z.string().optional().describe('User-provided content restrictions or guardrails to apply.'),
 });
 export type ApplyRestrictionsToSceneInput = z.infer<typeof ApplyRestrictionsToSceneInputSchema>;
 
 // Define the output schema for the ApplyRestrictionsToScene flow
 const ApplyRestrictionsToSceneOutputSchema = z.object({
   filteredContent: z.string().describe('The scene content after applying the specified restrictions.'),
+  appliedRestrictions: z.array(z.string()).describe('A list of all restrictions that were applied.'),
 });
 export type ApplyRestrictionsToSceneOutput = z.infer<typeof ApplyRestrictionsToSceneOutputSchema>;
 
@@ -32,19 +35,6 @@ export async function applyRestrictionsToScene(
   return applyRestrictionsToSceneFlow(input);
 }
 
-// Define the prompt to filter scene content based on the provided restrictions
-const applyRestrictionsPrompt = ai.definePrompt({
-  name: 'applyRestrictionsPrompt',
-  input: {schema: ApplyRestrictionsToSceneInputSchema},
-  output: {schema: ApplyRestrictionsToSceneOutputSchema},
-  prompt: `You are a content filter that adapts scene content based on specified restrictions.
-
-  Original Scene Content: {{{sceneContent}}}
-  Restrictions: {{{restrictions}}}
-
-  Filtered Scene Content:`,
-});
-
 // Define the Genkit flow for applying restrictions to the scene content
 const applyRestrictionsToSceneFlow = ai.defineFlow(
   {
@@ -52,8 +42,38 @@ const applyRestrictionsToSceneFlow = ai.defineFlow(
     inputSchema: ApplyRestrictionsToSceneInputSchema,
     outputSchema: ApplyRestrictionsToSceneOutputSchema,
   },
-  async input => {
-    const {output} = await applyRestrictionsPrompt(input);
-    return output!;
+  async ({ sceneContent, moment, userRestrictions }) => {
+    const momentTyped = moment as Moment;
+    const allRestrictions = [...(momentTyped.restrictionTags || [])];
+    if (userRestrictions) {
+      allRestrictions.push(`User-defined: "${userRestrictions}"`);
+    }
+
+    if (allRestrictions.length === 0) {
+      return {
+        filteredContent: sceneContent,
+        appliedRestrictions: ['No restrictions applied.'],
+      };
+    }
+
+    const result = await ai.generate({
+      prompt: `You are a content filter. Adapt the following scene content to adhere to the specified restrictions.
+  
+      Original Scene Content:
+      "${sceneContent}"
+      
+      Restrictions to Apply:
+      - ${allRestrictions.join('\n- ')}
+      
+      Rewrite the scene content to comply with all restrictions. Do not mention the restrictions in your output. Just provide the filtered content.
+      
+      Filtered Scene Content:`,
+      model: 'googleai/gemini-2.5-flash',
+    });
+
+    return {
+      filteredContent: result.text,
+      appliedRestrictions: allRestrictions,
+    };
   }
 );

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useActionState } from 'react';
 import { generateSceneAction, type FormState } from '@/app/actions';
-import { Story, Chapter, Arc, Moment } from '@/lib/types';
+import { Story, Moment } from '@/lib/types';
 import {
   SidebarProvider,
   Sidebar,
@@ -37,6 +37,7 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   } | null>(null);
 
   const story = stories[0]; // Assuming one story for the demo
+  const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.chapterId, arcId: a.arcId}))));
 
   return (
     <SidebarProvider>
@@ -70,6 +71,8 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
               formAction={formAction}
               formState={formState}
               selectedMoment={selectedMoment}
+              onSelectMoment={setSelectedMoment}
+              moments={allMoments}
             />
           </div>
           <div className="lg:col-span-1">

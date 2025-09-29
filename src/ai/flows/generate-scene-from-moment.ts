@@ -13,6 +13,7 @@ import {z} from 'genkit';
 
 const GenerateSceneFromMomentInputSchema = z.object({
   momentId: z.string().describe('The ID of the moment to generate the scene from.'),
+  content: z.string().describe('The core narrative content of the moment.'),
   chapterId: z.string().describe('The ID of the chapter the moment belongs to.'),
   arcId: z.string().describe('The ID of the arc the moment belongs to.'),
   partySnapshot: z
@@ -77,17 +78,20 @@ const prompt = ai.definePrompt({
   name: 'generateSceneFromMomentPrompt',
   input: {schema: GenerateSceneFromMomentInputSchema},
   output: {schema: GenerateSceneFromMomentOutputSchema},
-  prompt: `You are a scene generator for a narrative adventure game.  You will be provided the current game context, and must weave a scene that is appropriate.
+  prompt: `You are a scene generator for a narrative adventure game. You will be provided the core content of a narrative "moment" and the current game context. Your task is to weave these elements into a vivid and dynamic scene.
+
+Moment Content:
+"{{{content}}}"
 
 Game Context:
-Chapter Id: {{{chapterId}}}
-Arc Id: {{{arcId}}}
-Moment Id: {{{momentId}}}
-Party Snapshot: {{{partySnapshot}}}
-Environment State: {{{environmentState}}}
-Current Mood: {{{currentMood}}}
+- Chapter ID: {{{chapterId}}}
+- Arc ID: {{{arcId}}}
+- Moment ID: {{{momentId}}}
+- Party Snapshot: {{{partySnapshot}}}
+- Environment: {{{environmentState}}}
+- Current Mood: {{{currentMood}}}
 
-Create a vivid and dynamic narrative scene that enriches the selected Moment with the provided runtime context. Consider the characters, equipment, and overall mood to generate compelling narrative text, asset hooks, and branching options.
+Based on all this information, generate a compelling scene. The narrative text should be an expansion of the provided moment content, enriched by the context. Define a clear title, determine the resulting mood, and create relevant highlights and branching options.
 
 Output a JSON object conforming to the following schema: {{$instructions}}`,
 });
@@ -104,14 +108,14 @@ const generateSceneFromMomentFlow = ai.defineFlow(
       return {
         sceneId: `scene-${Date.now()}`,
         title: 'The Compass Awakens (Static)',
-        narrativeText:
-          'The crackle of the campfire is the only sound, a stark contrast to the oppressive silence of the Veridian Forest. Elara pores over a crumbling map, Bram sharpens his axe, and Lyra seems to melt into the shadows. Suddenly, the old compass on a nearby rock hums, emitting a soft, ethereal glow. A ghostly needle of light stabs northward into the pitch-black woods, promising an unknown path.',
+        narrativeText: input.content,
         mood: 'Anticipation and Mystery',
         assetHooks: ['asset-forest-night', 'asset-campfire-crackle'],
         recommendedChoices: ['Examine the compass', 'Ready the party to leave'],
         partyHighlights: [
           'Elara is focused on her research.',
           'Bram is preparing for a potential fight.',
+          'Lyra is observing from the shadows.'
         ],
         equipmentHighlights: [
           {
@@ -130,7 +134,7 @@ const generateSceneFromMomentFlow = ai.defineFlow(
         ],
         diagnostics: {
           appliedRestrictions: ['Initial moment, no restrictions applied.'],
-          moodAdjustments: ['Mood set to "Anticipation" based on context.'],
+          moodAdjustments: [`Mood set to "${input.currentMood}" based on context.`],
           branchForecast: 'High probability of proceeding to "The First Step".',
         },
       };
