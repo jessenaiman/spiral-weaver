@@ -1,8 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
@@ -11,20 +10,20 @@ datasource db {
 }
 
 model Story {
-  id        String    @id @default(cuid())
-  storyId   String    @unique
-  title     String
-  summary   String
-  chapters  Chapter[]
+  id       String    @id @default(cuid())
+  storyId  String    @unique
+  title    String
+  summary  String
+  chapters Chapter[]
 }
 
 model Chapter {
-  id        String   @id @default(cuid())
-  chapterId String   @unique
+  id        String  @id @default(cuid())
+  chapterId String  @unique
   name      String
   synopsis  String
   metadata  String
-  story     Story    @relation(fields: [storyId], references: [id])
+  story     Story   @relation(fields: [storyId], references: [id])
   storyId   String
   arcs      Arc[]
 }
@@ -40,19 +39,19 @@ model Arc {
 }
 
 model Moment {
-  id               String   @id @default(cuid())
-  momentId         String   @unique
-  title            String
-  content          String?
-  timeline         String?
-  themes           String?
-  lore             String?
-  subtext          String?
-  narrativeBeats   String
-  branchingHooks   String   @default("[]")
-  sensoryAnchors   String
-  loreRefs         String   @default("[]")
-  restrictionTags  String
-  arc              Arc      @relation(fields: [arcId], references: [id])
-  arcId            String
+  id              String   @id @default(cuid())
+  momentId        String   @unique
+  title           String
+  content         String?
+  timeline        String?
+  themes          String?
+  lore            String?
+  subtext         String?
+  narrativeBeats  String
+  branchingHooks  String   @default("[]")
+  sensoryAnchors  String
+  loreRefs        String   @default("[]")
+  restrictionTags String
+  arc             Arc      @relation(fields: [arcId], references: [id])
+  arcId           String
 }

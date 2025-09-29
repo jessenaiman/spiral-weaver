@@ -15,7 +15,11 @@ export interface BranchingHook {
 export interface Moment {
   momentId: string;
   title: string;
-  narrativeBeats: string[];
+  content: string; // Replaces narrativeBeats
+  timeline: string[];
+  themes: string[];
+  lore: string[];
+  subtext: string[];
   branchingHooks: BranchingHook[];
   sensoryAnchors: string[];
   loreRefs: LoreReference[];
