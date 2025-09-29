@@ -4,35 +4,53 @@ import partyData from './data/sample-party.json';
 import equipmentData from './data/sample-equipment.json';
 
 // This service simulates the ReferenceShelf by reading directly from JSON files.
-// It completely replaces the Prisma-based implementation.
 export class ReferenceShelf {
   private story: Story;
   private party: PartySnapshot;
   private equipment: EquipmentItem[];
 
   constructor() {
-    this.story = this.processStoryData(narrativeData.stories[0] as Omit<Story, 'chapters'> & { chapters: any[] });
+    this.story = this.processStoryData(narrativeData.stories[0] as any);
     this.party = partyData as PartySnapshot;
     this.equipment = equipmentData as EquipmentItem[];
   }
 
-  // Helper to add chapterId and arcId to each moment for easier lookup
-  private processStoryData(story: Omit<Story, 'chapters'> & { chapters: any[] }): Story {
-      const chapters = story.chapters.map(chapter => ({
-          ...chapter,
-          arcs: chapter.arcs.map((arc: any) => ({
-              ...arc,
-              moments: arc.moments.map((moment: any) => ({
-                  ...moment,
-                  chapterId: chapter.chapterId,
-                  arcId: arc.arcId,
-              })),
-          })),
-      }));
-      return { ...story, chapters } as Story;
+  // Helper to add chapterId and arcId to each moment for easier lookup and to reconstruct the story object
+  private processStoryData(storyData: any): Story {
+      const story: Story = {
+        storyId: storyData.storyId,
+        title: storyData.title,
+        summary: storyData.summary,
+        chapters: [],
+      };
+
+      story.chapters = storyData.chapters.map((chapterData: any) => {
+          const chapter: Chapter = {
+              ...chapterData,
+              arcs: [],
+          };
+
+          chapter.arcs = chapterData.arcs.map((arcData: any) => {
+              const arc: Arc = {
+                  ...arcData,
+                  moments: [],
+              };
+              
+              arc.moments = arcData.moments.map((momentData: any) => {
+                  return {
+                      ...momentData,
+                      chapterId: chapter.chapterId,
+                      arcId: arc.arcId,
+                  };
+              });
+              return arc;
+          });
+          return chapter;
+      });
+
+      return story;
   }
 
-  // Simulates LoreCatalog
   async getStories(): Promise<Story[]> {
     return Promise.resolve([this.story]);
   }
