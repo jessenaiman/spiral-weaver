@@ -12,7 +12,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "postinstall": "prisma generate"
+    "postinstall": "PRISMA_CLIENT_ENGINE_TYPE=\"library\" prisma generate"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",

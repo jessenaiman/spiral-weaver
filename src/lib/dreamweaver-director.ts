@@ -1,10 +1,9 @@
 import { ReferenceShelf } from './narrative-service';
 import { MoodEngine } from './mood-engine';
 import { narrativeJournal, NarrativeJournalType } from './narrative-journal';
-import type { Moment, SceneDescriptor } from './types';
-import { generateSceneFromMoment } from '@/ai/flows/generate-scene-from-moment';
-import { applyRestrictionsToScene } from '@/ai/flows/apply-restrictions-to-scene';
-
+import { SceneAssembler } from './scene-assembler';
+import { RestrictionService } from './restriction-service';
+import type { Moment, SceneDescriptor, RuntimeContext } from './types';
 
 /**
  * The DreamweaverDirector orchestrates the scene generation process.
@@ -15,13 +14,63 @@ export class DreamweaverDirector {
   public referenceShelf: ReferenceShelf;
   public moodEngine: MoodEngine;
   public journal: NarrativeJournalType;
+  private sceneAssembler: SceneAssembler;
+  private restrictionService: RestrictionService;
 
   constructor() {
     this.referenceShelf = new ReferenceShelf();
     this.moodEngine = new MoodEngine();
     this.journal = narrativeJournal;
+    this.sceneAssembler = new SceneAssembler();
+    this.restrictionService = new RestrictionService();
   }
 
+  /**
+   * Plans and generates the next scene based on the selected moment and context.
+   */
+  async generateScene(
+    storyId: string,
+    chapterId: string,
+    arcId: string,
+    momentId: string,
+    userRestrictions?: string
+  ): Promise<SceneDescriptor> {
+    const moment = await this.referenceShelf.getMoment(storyId, chapterId, arcId, momentId);
+    if (!moment) {
+      throw new Error('Selected moment not found.');
+    }
+
+    // Step 1: Assemble the runtime context.
+    const partySnapshot = await this.referenceShelf.snapshotParty();
+    const context: RuntimeContext = {
+      chapterId,
+      arcId,
+      momentId,
+      partySnapshot,
+      environmentState: 'Calm, early evening',
+      currentMood: this.moodEngine.getCurrentMood(),
+    };
+
+    // Step 2: Delegate scene assembly to the SceneAssembler.
+    let sceneDescriptor = await this.sceneAssembler.buildScene(moment, context);
+
+    // Step 3: Delegate restriction application to the RestrictionService.
+    const filteredResult = await this.restrictionService.applyRestrictions(
+      sceneDescriptor.narrativeText,
+      moment,
+      userRestrictions
+    );
+    
+    // Update the scene with the filtered content and diagnostics
+    sceneDescriptor.narrativeText = filteredResult.filteredContent;
+    sceneDescriptor.diagnostics.appliedRestrictions = filteredResult.appliedRestrictions;
+
+    // Step 4: Log the final scene to the journal.
+    this.journal.logScene(sceneDescriptor);
+    
+    return sceneDescriptor;
+  }
+  
   /**
    * Selects the next moment based on the current moment's branching hooks.
    * For now, it deterministically selects the hook with the highest weight.
@@ -37,45 +86,5 @@ export class DreamweaverDirector {
     );
 
     return nextBranch.targetMomentId;
-  }
-  
-  async generateScene(momentId: string, chapterId: string, arcId: string, userRestrictions?: string): Promise<SceneDescriptor> {
-    const moment = await this.referenceShelf.getMoment(chapterId, arcId, momentId, momentId);
-
-    if (!moment) {
-      throw new Error('Selected moment not found.');
-    }
-
-    // Step 1: Generate the initial scene from the moment and runtime context.
-    const partySnapshot = await this.referenceShelf.snapshotParty();
-    const sceneInput = {
-      momentId: moment.momentId,
-      content: moment.content,
-      chapterId,
-      arcId,
-      partySnapshot,
-      environmentState: "Calm, early evening",
-      currentMood: this.moodEngine.getCurrentMood(),
-    };
-    
-    let sceneDescriptor = await generateSceneFromMoment(sceneInput);
-
-    // Step 2: Apply restrictions (both built-in and user-defined)
-    const restrictionInput = {
-      sceneContent: sceneDescriptor.narrativeText,
-      moment, // Pass the full moment
-      userRestrictions: userRestrictions,
-    };
-    
-    const filteredResult = await applyRestrictionsToScene(restrictionInput);
-    
-    // Update the scene with the filtered content and add to diagnostics
-    sceneDescriptor.narrativeText = filteredResult.filteredContent;
-    sceneDescriptor.diagnostics.appliedRestrictions = filteredResult.appliedRestrictions;
-
-    // Step 3: Log the scene to the journal
-    this.journal.logScene(sceneDescriptor);
-    
-    return sceneDescriptor;
   }
 }

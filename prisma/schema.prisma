@@ -1,3 +1,5 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider      = "prisma-client-js"
@@ -10,32 +12,32 @@ datasource db {
 }
 
 model Story {
-  id       String    @id @default(cuid())
-  storyId  String    @unique
-  title    String
-  summary  String
+  id      String    @id @default(cuid())
+  storyId String    @unique
+  title   String
+  summary String
   chapters Chapter[]
 }
 
 model Chapter {
-  id        String  @id @default(cuid())
-  chapterId String  @unique
+  id        String   @id @default(cuid())
+  chapterId String   @unique
   name      String
   synopsis  String
-  metadata  String
-  story     Story   @relation(fields: [storyId], references: [id])
+  metadata  String?
+  story     Story    @relation(fields: [storyId], references: [id])
   storyId   String
   arcs      Arc[]
 }
 
 model Arc {
-  id        String   @id @default(cuid())
-  arcId     String   @unique
-  label     String
-  theme     String
-  chapter   Chapter  @relation(fields: [chapterId], references: [id])
+  id       String   @id @default(cuid())
+  arcId    String   @unique
+  label    String
+  theme    String
+  chapter  Chapter  @relation(fields: [chapterId], references: [id])
   chapterId String
-  moments   Moment[]
+  moments  Moment[]
 }
 
 model Moment {
