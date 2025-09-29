@@ -1,10 +1,9 @@
-import { PrismaClient } from '@prisma/client/edge'
-import { withAccelerate } from '@prisma/extension-accelerate'
+import { PrismaClient } from '@prisma/client'
 import type { Story, PartySnapshot, EquipmentItem, Chapter, Arc, Moment } from '@/lib/types';
 import partyData from './data/sample-party.json';
 import equipmentData from './data/sample-equipment.json';
 
-const prisma = new PrismaClient().$extends(withAccelerate())
+const prisma = new PrismaClient()
 
 // Helper to parse JSON fields from the database
 function parseJSONFields(obj: any, fields: string[]) {
