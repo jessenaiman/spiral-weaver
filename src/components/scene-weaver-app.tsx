@@ -17,6 +17,7 @@ import SceneDisplay from '@/components/scene-display';
 import DiagnosticsPanel from '@/components/diagnostics-panel';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Icons } from './icons';
+import { ReferenceShelf } from '@/lib/narrative-service';
 
 interface SceneWeaverAppProps {
   stories: Story[];
@@ -37,6 +38,7 @@ export type SelectedItem =
 export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   const [sceneState, sceneAction] = useActionState(generateSceneAction, initialSceneState);
   const [selectedItem, setSelectedItem] = React.useState<SelectedItem | null>(null);
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   const story = stories[0]; // Assuming one story for the demo
   const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.id, arcId: a.id, storyId: story.id}))));
@@ -44,18 +46,35 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   const handleSelectMoment = (moment: Moment) => {
     const fullMoment = allMoments.find(m => m.id === moment.id);
     if(fullMoment) {
-      setSelectedItem({ type: 'moment', data: fullMoment });
+      handleSelect({ type: 'moment', data: fullMoment });
     }
   };
   
-  const handleSelect = (item: SelectedItem) => {
+  const handleSelect = async (item: SelectedItem) => {
     setSelectedItem(item);
-    // Clear the generated scene when a new item is selected
-    if (initialSceneState.data) {
-        initialSceneState.data = null;
-        initialSceneState.error = null;
+    
+    // If a moment is selected, automatically trigger the form action
+    // to either load saved scenes or generate new ones.
+    if (item.type === 'moment') {
+        const referenceShelf = new ReferenceShelf();
+        const savedScenes = await referenceShelf.getSavedScenesForMoment(item.data.id);
+        
+        if (savedScenes) {
+            // If scenes are saved, just display them without calling the full action
+            const newState: GenerateSceneState = { data: savedScenes, error: null, isLoadedFromSave: true };
+            // This is tricky because useActionState doesn't let us set state directly.
+            // A better refactor would be to separate loading from generating.
+            // For now, we'll trigger the form to get the same effect.
+             setTimeout(() => formRef.current?.requestSubmit(), 0);
+
+        } else {
+             // We need to trigger the form action. We can do this by submitting the form.
+             // The form needs to be in the DOM and have the correct hidden values.
+             setTimeout(() => formRef.current?.requestSubmit(), 0);
+        }
     }
   };
+
 
   return (
     <SidebarProvider>
@@ -74,6 +93,22 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
           />
         </SidebarContent>
       </Sidebar>
+
+      {/* Hidden form to trigger action */}
+      <form ref={formRef} action={sceneAction} style={{ display: 'none' }}>
+        {selectedItem?.type === 'moment' && (
+          <>
+            <input type="hidden" name="storyId" value={selectedItem.data.storyId} />
+            <input type="hidden" name="chapterId" value={selectedItem.data.chapterId} />
+            <input type="hidden" name="arcId" value={selectedItem.data.arcId} />
+            <input type="hidden" name="momentId" value={selectedItem.data.id} />
+             <textarea name="restrictions" defaultValue={
+                document.querySelector<HTMLTextAreaElement>('#restrictions')?.value
+             }></textarea>
+          </>
+        )}
+      </form>
+
 
       <SidebarInset className="p-4 md:p-6 lg:p-8">
         <div className="flex items-center justify-between mb-4">

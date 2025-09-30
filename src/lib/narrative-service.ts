@@ -1,18 +1,21 @@
-import type { Story, PartySnapshot, EquipmentItem, Chapter, Arc, Moment } from '@/lib/types';
+import type { Story, PartySnapshot, EquipmentItem, Chapter, Arc, Moment, SceneDescriptor } from '@/lib/types';
 import narrativeData from './data/sample-narrative.json';
 import partyData from './data/sample-party.json';
 import equipmentData from './data/sample-equipment.json';
+import savedScenesData from './data/saved-scenes.json';
 
 // This service simulates the ReferenceShelf by reading directly from JSON files.
 export class ReferenceShelf {
   private story: Story;
   private party: PartySnapshot;
   private equipment: EquipmentItem[];
+  private savedScenes: Record<string, SceneDescriptor[]>;
 
   constructor() {
     this.story = this.processStoryData(narrativeData.stories[0] as any);
     this.party = partyData as PartySnapshot;
     this.equipment = equipmentData as EquipmentItem[];
+    this.savedScenes = savedScenesData as Record<string, SceneDescriptor[]>;
   }
 
   // Helper to add chapterId and arcId to each moment for easier lookup and to reconstruct the story object
@@ -87,6 +90,10 @@ export class ReferenceShelf {
   async getMoment(storyId: string, chapterId: string, arcId: string, momentId: string): Promise<Moment | undefined> {
     const arc = await this.getArc(storyId, chapterId, arcId);
     return Promise.resolve(arc?.moments.find(m => m.id === momentId));
+  }
+
+  async getSavedScenesForMoment(momentId: string): Promise<SceneDescriptor[] | undefined> {
+    return Promise.resolve(this.savedScenes[momentId]);
   }
 
   // Simulates CharacterLedger

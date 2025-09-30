@@ -1,6 +1,9 @@
 'use client';
 
-import type { GenerateSceneState } from '@/app/actions';
+import * as React from 'react';
+import { useActionState, useTransition } from 'react';
+import type { GenerateSceneState, SaveScenesState } from '@/app/actions';
+import { saveScenesAction } from '@/app/actions';
 import { Button } from './ui/button';
 import { Card, CardDescription, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Icons } from './icons';
@@ -8,8 +11,11 @@ import { useFormStatus } from 'react-dom';
 import { Moment } from '@/lib/types';
 import { SelectedItem } from './scene-weaver-app';
 import NarrativeContentDisplay from './narrative-content-display';
+import ArcContentDisplay from './arc-content-display';
 import SceneCard from './scene-card';
 import { Separator } from './ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { Save } from 'lucide-react';
 
 interface SceneDisplayProps {
   formAction: (payload: FormData) => void;
@@ -18,6 +24,8 @@ interface SceneDisplayProps {
   onSelectMoment: (moment: Moment) => void;
   moments: Moment[];
 }
+
+const initialSaveState: SaveScenesState = { message: null, error: null };
 
 function ScenePlaceholder() {
   return (
@@ -54,8 +62,36 @@ function SubmitButton({ selectedItem }: { selectedItem: SceneDisplayProps['selec
   );
 }
 
+function SaveScenesButton({ scenes, momentId }: { scenes: GenerateSceneState['data'], momentId: string }) {
+    const [isPending, startTransition] = useTransition();
+    const { toast } = useToast();
+
+    const handleSave = () => {
+        const formData = new FormData();
+        formData.append('momentId', momentId);
+        formData.append('scenes', JSON.stringify(scenes));
+
+        startTransition(async () => {
+            const result = await saveScenesAction(initialSaveState, formData);
+            if (result.error) {
+                toast({ variant: 'destructive', title: 'Error', description: result.error });
+            } else {
+                toast({ title: 'Success', description: result.message });
+            }
+        });
+    };
+
+    return (
+        <Button onClick={handleSave} disabled={isPending} variant="outline" size="sm">
+            <Save className="mr-2 h-4 w-4" />
+            {isPending ? 'Saving...' : 'Save Scenes'}
+        </Button>
+    );
+}
+
+
 export default function SceneDisplay({ formAction, formState, selectedItem, onSelectMoment, moments }: SceneDisplayProps) {
-  const { data: scenes, error } = formState;
+  const { data: scenes, error, isLoadedFromSave } = formState;
   const { pending } = useFormStatus();
   
   const currentMoment = selectedItem?.type === 'moment' ? selectedItem.data : null;
@@ -80,6 +116,54 @@ export default function SceneDisplay({ formAction, formState, selectedItem, onSe
 
   const branchOptions = scenes?.[0]?.branchOptions;
 
+  const renderContent = () => {
+    if (pending) {
+      return <SceneLoading />;
+    }
+    if (error) {
+      return <div className="text-destructive p-4 bg-destructive/10 rounded-md mb-4">{error}</div>;
+    }
+    if (scenes) {
+      return (
+        <div className="space-y-6">
+          {isLoadedFromSave && (
+            <div className="p-2 text-sm text-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-md">
+                Loaded previously saved scenes for this moment.
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {scenes.map((scene) => (
+              <SceneCard key={scene.sceneId} scene={scene} />
+            ))}
+          </div>
+
+          {branchOptions && branchOptions.length > 0 && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="font-semibold flex items-center gap-2 mb-2 text-sm"><Icons.chapter /> Branch Options</h4>
+                <div className="flex flex-wrap gap-2">
+                  {branchOptions.map((option, i) => (
+                    <Button key={i} variant="outline" size="sm" className="text-xs" onClick={() => handleBranchClick(option.targetMomentId)}>
+                      {option.prompt}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    if (selectedItem?.type === 'arc') {
+        return <ArcContentDisplay item={selectedItem} />;
+    }
+    if (selectedItem) {
+        return <NarrativeContentDisplay item={selectedItem} />;
+    }
+    return <ScenePlaceholder />;
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <form id="scene-generation-form" action={formAction}>
@@ -95,51 +179,20 @@ export default function SceneDisplay({ formAction, formState, selectedItem, onSe
           <div>
             <CardTitle className="font-headline text-2xl">{selectedItem?.data.title ?? 'Scene Display'}</CardTitle>
             <CardDescription>
-              {scenes ? `Generated ${scenes.length} narrative threads` : 'The generated scenes will appear here.'}
+              {scenes ? (isLoadedFromSave ? 'Loaded saved scenes' : `Generated ${scenes.length} narrative threads`) : 'The generated scenes will appear here.'}
             </CardDescription>
           </div>
-          <SubmitButton selectedItem={selectedItem} />
+          <div className="flex items-center gap-2">
+            {scenes && !isLoadedFromSave && currentMoment && (
+              <SaveScenesButton scenes={scenes} momentId={currentMoment.id} />
+            )}
+            <SubmitButton selectedItem={selectedItem} />
+          </div>
         </CardHeader>
       </form>
 
       <CardContent className="flex-1 pt-0">
-        {error && <div className="text-destructive p-4 bg-destructive/10 rounded-md mb-4">{error}</div>}
-        
-        {pending ? (
-          <SceneLoading />
-        ) : scenes ? (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
-              {scenes.map((scene) => (
-                <SceneCard 
-                  key={scene.sceneId} 
-                  scene={scene} 
-                />
-              ))}
-            </div>
-
-            {branchOptions && branchOptions.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <h4 className="font-semibold flex items-center gap-2 mb-2 text-sm"><Icons.chapter /> Branch Options</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {branchOptions.map((option, i) => (
-                      <Button key={i} variant="outline" size="sm" className="text-xs" onClick={() => handleBranchClick(option.targetMomentId)}>
-                        {option.prompt}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-          </div>
-        ) : selectedItem ? (
-           <NarrativeContentDisplay item={selectedItem} />
-        ) : (
-          <ScenePlaceholder />
-        )}
+        {renderContent()}
       </CardContent>
     </Card>
   );
