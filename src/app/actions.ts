@@ -10,6 +10,7 @@ const formSchema = z.object({
   arcId: z.string(),
   momentId: z.string(),
   restrictions: z.string().optional(),
+  dreamweaver: z.enum(['Luminari', 'Shadow', 'Chronicler']),
 });
 
 export type FormState = {
@@ -28,12 +29,12 @@ export async function generateSceneAction(
       return { data: null, error: 'Invalid form data.' };
     }
     
-    const { storyId, chapterId, arcId, momentId, restrictions } = parsed.data;
+    const { storyId, chapterId, arcId, momentId, restrictions, dreamweaver } = parsed.data;
 
     // The Director is now the single entry point for scene generation
     const director = new DreamweaverDirector();
 
-    const sceneDescriptor = await director.generateScene(storyId, chapterId, arcId, momentId, restrictions);
+    const sceneDescriptor = await director.generateScene(storyId, chapterId, arcId, momentId, dreamweaver, restrictions);
     
     return { data: sceneDescriptor, error: null };
 

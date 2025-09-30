@@ -3,7 +3,7 @@ import { MoodEngine } from './mood-engine';
 import { narrativeJournal, NarrativeJournalType } from './narrative-journal';
 import { SceneAssembler } from './scene-assembler';
 import { RestrictionService } from './restriction-service';
-import type { Moment, SceneDescriptor, RuntimeContext } from './types';
+import type { Moment, SceneDescriptor, RuntimeContext, DreamweaverPersonality } from './types';
 
 /**
  * The DreamweaverDirector orchestrates the scene generation process.
@@ -33,6 +33,7 @@ export class DreamweaverDirector {
     chapterId: string,
     arcId: string,
     momentId: string,
+    dreamweaverPersonality: DreamweaverPersonality,
     userRestrictions?: string
   ): Promise<SceneDescriptor> {
     const moment = await this.referenceShelf.getMoment(storyId, chapterId, arcId, momentId);
@@ -51,8 +52,8 @@ export class DreamweaverDirector {
       currentMood: this.moodEngine.getCurrentMood(),
     };
 
-    // Step 2: Delegate scene assembly to the SceneAssembler.
-    let sceneDescriptor = await this.sceneAssembler.buildScene(moment, context);
+    // Step 2: Delegate scene assembly to the SceneAssembler, now with personality.
+    let sceneDescriptor = await this.sceneAssembler.buildScene(moment, context, dreamweaverPersonality);
 
     // Step 3: Delegate restriction application to the RestrictionService.
     const filteredResult = await this.restrictionService.applyRestrictions(

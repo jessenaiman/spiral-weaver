@@ -1,4 +1,7 @@
 // 1.1 Narrative Data Model
+
+export type DreamweaverPersonality = 'Luminari' | 'Shadow' | 'Chronicler';
+
 export interface LoreReference {
   id: string;
   type: string;
@@ -14,6 +17,7 @@ export interface BranchingHook {
 
 export interface Moment {
   id: string;
+  momentId: string; // Keep original ID for lookups
   title: string;
   content: string; // Replaces narrativeBeats
   timeline: string[];

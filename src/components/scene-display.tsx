@@ -36,9 +36,9 @@ function SceneLoading() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-8 border-2 border-dashed rounded-lg animate-pulse">
       <Icons.spinner className="h-12 w-12 text-primary animate-spin" />
-      <h3 className="mt-4 text-lg font-semibold">Weaving the narrative...</h3>
+      <h3 className="mt-4 text-lg font-semibold">The Dreamweaver is weaving...</h3>
       <p className="mt-1 text-sm text-muted-foreground">
-        The Dreamweaver is assembling your scene. This might take a moment.
+        A new narrative is being generated based on your selection. This might take a moment.
       </p>
     </div>
   );
@@ -105,56 +105,31 @@ export default function SceneDisplay({ formAction, formState, selectedItem, onSe
         {pending ? (
           <SceneLoading />
         ) : scene ? (
-          <Tabs defaultValue="narrative" className="w-full">
-            <TabsList>
-              <TabsTrigger value="narrative">Narrative</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-            </TabsList>
-            <TabsContent value="narrative" className="space-y-6 mt-4">
-              <div>
-                <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.narrative /> Narrative Text</h4>
-                <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{scene.narrativeText}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><Badge variant="outline">Mood: {scene.mood}</Badge></div>
-              </div>
-              
-               {scene.branchOptions && scene.branchOptions.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.chapter /> Branch Options</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {scene.branchOptions.map((option, i) => (
-                         <Button key={i} variant="outline" size="sm" onClick={() => handleBranchClick(option.targetMomentId)}>
-                          {option.prompt}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </TabsContent>
-            <TabsContent value="details" className="space-y-6 mt-4">
-               <div>
-                  <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.party /> Party Highlights</h4>
-                  {scene.partyHighlights.length > 0 ? (
-                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
-                        {scene.partyHighlights.map((highlight, i) => <li key={i}>{highlight}</li>)}
-                    </ul>
-                  ) : <p className="text-muted-foreground text-sm">No specific party highlights.</p>}
-                </div>
+          <div className="space-y-6 mt-4">
+            <div>
+              <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.narrative /> Narrative Text</h4>
+              <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none">{scene.narrativeText}</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div><Badge variant="outline">Mood: {scene.mood}</Badge></div>
+            </div>
+            
+              {scene.branchOptions && scene.branchOptions.length > 0 && (
+              <>
                 <Separator />
-                 <div>
-                  <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.equipment /> Equipment Highlights</h4>
-                  {scene.equipmentHighlights.length > 0 ? (
-                    <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1">
-                        {scene.equipmentHighlights.map((item, i) => <li key={i}><b>{item.name}:</b> {item.usageNotes}</li>)}
-                    </ul>
-                  ) : <p className="text-muted-foreground text-sm">No specific equipment highlights.</p>}
+                <div>
+                  <h4 className="font-semibold flex items-center gap-2 mb-2"><Icons.chapter /> Branch Options</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {scene.branchOptions.map((option, i) => (
+                        <Button key={i} variant="outline" size="sm" onClick={() => handleBranchClick(option.targetMomentId)}>
+                        {option.prompt}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-            </TabsContent>
-          </Tabs>
+              </>
+            )}
+          </div>
         ) : selectedItem ? (
            <NarrativeContentDisplay item={selectedItem} />
         ) : (

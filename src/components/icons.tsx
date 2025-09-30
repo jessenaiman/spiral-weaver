@@ -10,6 +10,7 @@ import {
   Swords,
   ScrollText,
   Loader,
+  Bot,
   type LucideProps,
 } from 'lucide-react';
 
@@ -26,4 +27,5 @@ export const Icons = {
   narrative: ScrollText,
   spinner: Loader,
   sparkles: Sparkles,
+  dreamweaver: Bot,
 };

@@ -1,7 +1,8 @@
 'use server';
 
 /**
- * @fileOverview Generates a SceneDescriptor from a selected Moment, enriching it with runtime context using GenAI.
+ * @fileOverview Generates a SceneDescriptor from a selected Moment, using a specific Dreamweaver personality
+ * to guide the storytelling.
  *
  * - generateSceneFromMoment - A function that handles the scene generation process.
  * - GenerateSceneFromMomentInput - The input type for the generateSceneFromMoment function.
@@ -21,6 +22,7 @@ const GenerateSceneFromMomentInputSchema = z.object({
     .describe('A snapshot of the current party, including members and status.'),
   environmentState: z.string().describe('The current state of the environment.'),
   currentMood: z.string().describe('The current mood or emotional tone.'),
+  dreamweaverPersonality: z.enum(['Luminari', 'Shadow', 'Chronicler']).describe('The selected Dreamweaver personality (good, evil, neutral).')
 });
 export type GenerateSceneFromMomentInput = z.infer<
   typeof GenerateSceneFromMomentInputSchema
@@ -47,9 +49,9 @@ const SceneDiagnosticsSchema = z.object({
 
 const GenerateSceneFromMomentOutputSchema = z.object({
   sceneId: z.string().describe('The unique ID of the generated scene.'),
-  title: z.string().describe('The title of the scene.'),
-  narrativeText: z.string().describe('The narrative text describing the scene. This should be an expansion of the provided moment content, enriched by the context.'),
-  mood: z.string().describe('The overall mood or atmosphere of the scene.'),
+  title: z.string().describe('The title of the scene, reflecting the personality of the Dreamweaver.'),
+  narrativeText: z.string().describe('The newly generated narrative text, continuing from the moment\'s content and guided by the Dreamweaver\'s personality.'),
+  mood: z.string().describe('The overall mood or atmosphere of the scene, influenced by the Dreamweaver.'),
   assetHooks: z.array(z.string()).describe('A list of asset keys required for the scene.'),
   recommendedChoices: z
     .array(z.string())
@@ -78,14 +80,21 @@ const prompt = ai.definePrompt({
   name: 'generateSceneFromMomentPrompt',
   input: {schema: GenerateSceneFromMomentInputSchema},
   output: {schema: GenerateSceneFromMomentOutputSchema},
-  prompt: `You are a scene generator for a narrative adventure game. You will be provided the core content of a narrative "moment" and the current game context. Your task is to weave these elements into a vivid and dynamic scene.
+  prompt: `You are a Dreamweaver, a powerful AI storyteller for a narrative adventure game. Your task is to generate a new narrative scene that logically follows from a given "moment". You must adopt a specific personality to guide your storytelling.
 
-The core content of the moment is:
+The Dreamweaver Personalities:
+- **Luminari (Good):** You are a hopeful and benevolent storyteller. Your narratives focus on heroism, light, redemption, and the better aspects of nature and character. You create scenes that inspire and offer paths toward positive outcomes.
+- **Shadow (Evil):** You are a dark and malevolent storyteller. Your narratives embrace conflict, despair, corruption, and the grim realities of the world. You create scenes that challenge, threaten, and explore the darker aspects of the story and characters.
+- **Chronicler (Neutral):** You are an objective and balanced storyteller. Your narratives are factual, descriptive, and unbiased. You present events as they are, focusing on cause and effect without favoring light or shadow.
+
+**Your current personality is: {{{dreamweaverPersonality}}}**
+
+The player has selected the following narrative moment to continue from:
 "{{{content}}}"
 
-This content is the source of truth. Your main task is to generate the surrounding details based on the game context. The 'narrativeText' you output should be a creative expansion and enrichment of the provided moment content, not just a copy.
+This content is the starting point. Your main task is to generate a **new narrative element** that logically continues the story, seen through the lens of your assigned personality.
 
-Game Context:
+Game Context to inform your generation:
 - Chapter ID: {{{chapterId}}}
 - Arc ID: {{{arcId}}}
 - Moment ID: {{{momentId}}}
@@ -93,7 +102,7 @@ Game Context:
 - Environment: {{{environmentState}}}
 - Current Mood: {{{currentMood}}}
 
-Based on all this information, generate a compelling scene. Define a clear title, determine the resulting mood, and create relevant highlights and branching options.
+Based on your personality and the provided context, generate a compelling new scene. Create a new title, narrative text, and other details that reflect your unique perspective as the Dreamweaver.
 
 Output a JSON object conforming to the following schema: {{$instructions}}`,
 });
@@ -109,5 +118,3 @@ const generateSceneFromMomentFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    

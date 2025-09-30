@@ -10,6 +10,8 @@ import { Icons } from './icons';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { SelectedItem } from './scene-weaver-app';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { DreamweaverPersonality } from '@/lib/types';
 
 interface NarrativeBrowserProps {
   story: Story;
@@ -20,6 +22,35 @@ interface NarrativeBrowserProps {
 export default function NarrativeBrowser({ story, onSelect, selectedItemId }: NarrativeBrowserProps) {
   return (
     <div className="flex flex-col h-full p-2 gap-4 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:items-center">
+      <div className="px-2 group-data-[collapsible=icon]:hidden">
+        <Label htmlFor="dreamweaver">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Icons.dreamweaver />
+            Dreamweaver
+          </div>
+        </Label>
+        <RadioGroup defaultValue="Chronicler" id="dreamweaver" name="dreamweaver" form="scene-generation-form" className="grid grid-cols-3 gap-2 mt-2">
+            <div>
+              <RadioGroupItem value="Luminari" id="luminari" className="peer sr-only" />
+              <Label htmlFor="luminari" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary text-xs">
+                Luminari
+              </Label>
+            </div>
+             <div>
+              <RadioGroupItem value="Shadow" id="shadow" className="peer sr-only" />
+              <Label htmlFor="shadow" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary text-xs">
+                Shadow
+              </Label>
+            </div>
+            <div>
+              <RadioGroupItem value="Chronicler" id="chronicler" className="peer sr-only" />
+              <Label htmlFor="chronicler" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-2 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary text-xs">
+                Chronicler
+              </Label>
+            </div>
+        </RadioGroup>
+      </div>
+      
       <div className="px-2 group-data-[collapsible=icon]:hidden">
         <Label htmlFor="restrictions">
           <div className="flex items-center gap-2 text-sm font-medium">
