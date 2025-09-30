@@ -11,6 +11,7 @@ import {
   ScrollText,
   Loader,
   Bot,
+  View,
   type LucideProps,
 } from 'lucide-react';
 
@@ -28,4 +29,5 @@ export const Icons = {
   spinner: Loader,
   sparkles: Sparkles,
   dreamweaver: Bot,
+  scene: View,
 };

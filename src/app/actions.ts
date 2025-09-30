@@ -1,7 +1,7 @@
 'use server';
 
 import { DreamweaverDirector } from '@/lib/dreamweaver-director';
-import type { SceneDescriptor } from '@/lib/types';
+import type { SceneDescriptor, DreamweaverPersonality } from '@/lib/types';
 import { z } from 'zod';
 
 const formSchema = z.object({
@@ -10,13 +10,14 @@ const formSchema = z.object({
   arcId: z.string(),
   momentId: z.string(),
   restrictions: z.string().optional(),
-  dreamweaver: z.enum(['Luminari', 'Shadow', 'Chronicler']),
 });
 
 export type FormState = {
-  data: SceneDescriptor | null;
+  data: SceneDescriptor[] | null;
   error: string | null;
 };
+
+const personalities: DreamweaverPersonality[] = ['Luminari', 'Shadow', 'Chronicler'];
 
 export async function generateSceneAction(
   prevState: FormState,
@@ -29,14 +30,18 @@ export async function generateSceneAction(
       return { data: null, error: 'Invalid form data.' };
     }
     
-    const { storyId, chapterId, arcId, momentId, restrictions, dreamweaver } = parsed.data;
+    const { storyId, chapterId, arcId, momentId, restrictions } = parsed.data;
 
-    // The Director is now the single entry point for scene generation
     const director = new DreamweaverDirector();
 
-    const sceneDescriptor = await director.generateScene(storyId, chapterId, arcId, momentId, dreamweaver, restrictions);
+    // Generate all three scenes in parallel
+    const scenePromises = personalities.map(personality => 
+      director.generateScene(storyId, chapterId, arcId, momentId, personality, restrictions)
+    );
+
+    const sceneDescriptors = await Promise.all(scenePromises);
     
-    return { data: sceneDescriptor, error: null };
+    return { data: sceneDescriptors, error: null };
 
   } catch (e: unknown) {
     const error = e instanceof Error ? e.message : 'An unknown error occurred.';
