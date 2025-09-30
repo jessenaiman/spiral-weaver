@@ -8,7 +8,6 @@ import { Icons } from './icons';
 interface SceneCardProps {
   scene: SceneDescriptor;
   onBranchClick: (targetMomentId: string) => void;
-  dreamweaverPersonality: string;
 }
 
 const personalityStyles = {
@@ -23,9 +22,9 @@ const personalityIcons = {
     Chronicler: '📚',
 }
 
-export default function SceneCard({ scene, onBranchClick, dreamweaverPersonality }: SceneCardProps) {
-  const style = personalityStyles[dreamweaverPersonality as keyof typeof personalityStyles] || '';
-  const icon = personalityIcons[dreamweaverPersonality as keyof typeof personalityIcons] || '🎭';
+export default function SceneCard({ scene, onBranchClick }: SceneCardProps) {
+  const style = personalityStyles[scene.dreamweaverPersonality] || '';
+  const icon = personalityIcons[scene.dreamweaverPersonality] || '🎭';
   
   return (
     <Card className={`flex flex-col ${style}`}>
@@ -33,7 +32,7 @@ export default function SceneCard({ scene, onBranchClick, dreamweaverPersonality
         <CardTitle className="flex items-center justify-between">
           <div className='flex items-center gap-2'>
             <span className='text-2xl'>{icon}</span>
-            {dreamweaverPersonality}
+            {scene.dreamweaverPersonality}
           </div>
           <Badge variant="outline">Mood: {scene.mood}</Badge>
         </CardTitle>

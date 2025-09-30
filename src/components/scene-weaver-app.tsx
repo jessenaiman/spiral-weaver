@@ -39,7 +39,7 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   const [selectedItem, setSelectedItem] = React.useState<SelectedItem | null>(null);
 
   const story = stories[0]; // Assuming one story for the demo
-  const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.chapterId, arcId: a.arcId}))));
+  const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.id, arcId: a.id}))));
 
   const selectedMoment = selectedItem?.type === 'moment' ? selectedItem.data : null;
 
@@ -93,8 +93,8 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
             />
           </div>
           <div className="lg:col-span-1">
-            {formState.data ? (
-              <DiagnosticsPanel diagnostics={formState.data.diagnostics} />
+            {formState.data && formState.data.length > 0 ? (
+              <DiagnosticsPanel diagnostics={formState.data[0].diagnostics} />
             ) : (
                <Card className="h-full">
                 <CardHeader>

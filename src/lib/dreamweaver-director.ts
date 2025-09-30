@@ -56,22 +56,18 @@ export class DreamweaverDirector {
     let sceneDescriptor = await this.sceneAssembler.buildScene(moment, context, dreamweaverPersonality);
 
     // Step 3: Delegate restriction application to the RestrictionService.
-    // Add the personality to the user restrictions to be passed down and stored in diagnostics
-    const allUserRestrictions = [
-        `Personality: ${dreamweaverPersonality}`,
-        userRestrictions,
-    ].filter(Boolean).join('; ');
-
-
     const filteredResult = await this.restrictionService.applyRestrictions(
       sceneDescriptor.narrativeText,
       moment,
-      allUserRestrictions
+      userRestrictions
     );
     
     // Update the scene with the filtered content and diagnostics
     sceneDescriptor.narrativeText = filteredResult.filteredContent;
-    sceneDescriptor.diagnostics.appliedRestrictions = filteredResult.appliedRestrictions;
+    sceneDescriptor.diagnostics.appliedRestrictions = [
+        ...filteredResult.appliedRestrictions,
+        `Personality: ${dreamweaverPersonality}`
+    ];
 
     // Step 4: Log the final scene to the journal.
     this.journal.logScene(sceneDescriptor);

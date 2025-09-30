@@ -113,6 +113,7 @@ export interface SceneDescriptor {
   equipmentHighlights: EquipmentHighlight[];
   branchOptions: BranchOption[];
   diagnostics: SceneDiagnostics;
+  dreamweaverPersonality: DreamweaverPersonality;
 }
 
 export interface RuntimeContext {

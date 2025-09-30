@@ -106,12 +106,11 @@ export default function SceneDisplay({ formAction, formState, selectedItem, onSe
           <SceneLoading />
         ) : scenes ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-full">
-            {scenes.map((scene, i) => (
+            {scenes.map((scene) => (
               <SceneCard 
                 key={scene.sceneId} 
                 scene={scene} 
                 onBranchClick={handleBranchClick}
-                dreamweaverPersonality={scene.diagnostics.appliedRestrictions.find(r => r.startsWith('Personality:'))?.split(': ')[1] || 'Unknown'}
               />
             ))}
           </div>

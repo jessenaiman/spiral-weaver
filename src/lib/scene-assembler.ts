@@ -26,7 +26,13 @@ export class SceneAssembler {
       dreamweaverPersonality: dreamweaverPersonality,
     };
     
-    const sceneDescriptor = await generateSceneFromMoment(sceneInput);
+    const generatedScene = await generateSceneFromMoment(sceneInput);
+    
+    // Combine the generated data with the personality to form the final SceneDescriptor
+    const sceneDescriptor: SceneDescriptor = {
+      ...generatedScene,
+      dreamweaverPersonality: dreamweaverPersonality,
+    };
     
     return sceneDescriptor;
   }
