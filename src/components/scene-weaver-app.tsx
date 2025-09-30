@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useActionState } from 'react';
-import { generateSceneAction, type FormState } from '@/app/actions';
+import { generateSceneAction, type GenerateSceneState } from '@/app/actions';
 import { Story, Moment, Chapter, Arc } from '@/lib/types';
 import {
   SidebarProvider,
@@ -22,7 +22,7 @@ interface SceneWeaverAppProps {
   stories: Story[];
 }
 
-const initialState: FormState = {
+const initialSceneState: GenerateSceneState = {
   data: null,
   error: null,
 };
@@ -35,24 +35,25 @@ export type SelectedItem =
 
 
 export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
-  const [formState, formAction] = useActionState(generateSceneAction, initialState);
+  const [sceneState, sceneAction] = useActionState(generateSceneAction, initialSceneState);
   const [selectedItem, setSelectedItem] = React.useState<SelectedItem | null>(null);
 
   const story = stories[0]; // Assuming one story for the demo
-  const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.id, arcId: a.id}))));
-
-  const selectedMoment = selectedItem?.type === 'moment' ? selectedItem.data : null;
-
+  const allMoments = story.chapters.flatMap(c => c.arcs.flatMap(a => a.moments.map(m => ({...m, chapterId: c.id, arcId: a.id, storyId: story.id}))));
+  
   const handleSelectMoment = (moment: Moment) => {
-    setSelectedItem({ type: 'moment', data: moment });
+    const fullMoment = allMoments.find(m => m.id === moment.id);
+    if(fullMoment) {
+      setSelectedItem({ type: 'moment', data: fullMoment });
+    }
   };
   
   const handleSelect = (item: SelectedItem) => {
     setSelectedItem(item);
     // Clear the generated scene when a new item is selected
-    if (initialState.data) {
-        initialState.data = null;
-        initialState.error = null;
+    if (initialSceneState.data) {
+        initialSceneState.data = null;
+        initialSceneState.error = null;
     }
   };
 
@@ -85,16 +86,16 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <SceneDisplay 
-              formAction={formAction}
-              formState={formState}
+              formAction={sceneAction}
+              formState={sceneState}
               selectedItem={selectedItem}
               onSelectMoment={handleSelectMoment}
               moments={allMoments}
             />
           </div>
           <div className="lg:col-span-1">
-            {formState.data && formState.data.length > 0 ? (
-              <DiagnosticsPanel diagnostics={formState.data[0].diagnostics} />
+            {sceneState.data && sceneState.data.length > 0 ? (
+              <DiagnosticsPanel scenes={sceneState.data} />
             ) : (
                <Card className="h-full">
                 <CardHeader>

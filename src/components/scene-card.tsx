@@ -7,7 +7,6 @@ import { Icons } from './icons';
 
 interface SceneCardProps {
   scene: SceneDescriptor;
-  onBranchClick: (targetMomentId: string) => void;
 }
 
 const personalityStyles = {
@@ -22,7 +21,7 @@ const personalityIcons = {
     Chronicler: '📚',
 }
 
-export default function SceneCard({ scene, onBranchClick }: SceneCardProps) {
+export default function SceneCard({ scene }: SceneCardProps) {
   const style = personalityStyles[scene.dreamweaverPersonality] || '';
   const icon = personalityIcons[scene.dreamweaverPersonality] || '🎭';
   
@@ -43,22 +42,6 @@ export default function SceneCard({ scene, onBranchClick }: SceneCardProps) {
           <h4 className="font-semibold flex items-center gap-2 mb-2 text-sm"><Icons.narrative /> Narrative Text</h4>
           <p className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none text-xs">{scene.narrativeText}</p>
         </div>
-        
-        {scene.branchOptions && scene.branchOptions.length > 0 && (
-          <>
-            <Separator />
-            <div>
-              <h4 className="font-semibold flex items-center gap-2 mb-2 text-sm"><Icons.chapter /> Branch Options</h4>
-              <div className="flex flex-wrap gap-2">
-                {scene.branchOptions.map((option, i) => (
-                  <Button key={i} variant="outline" size="sm" className="text-xs" onClick={() => onBranchClick(option.targetMomentId)}>
-                    {option.prompt}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
       </CardContent>
     </Card>
   );
