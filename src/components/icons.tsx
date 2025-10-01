@@ -12,7 +12,6 @@ import {
   Loader,
   Bot,
   View,
-  type LucideProps,
 } from 'lucide-react';
 
 export const Icons = {

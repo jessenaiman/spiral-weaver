@@ -1,3 +1,20 @@
+// Mock all dependencies FIRST before imports
+jest.mock('@/lib/narrative-service')
+jest.mock('@/lib/scene-assembler')
+jest.mock('@/lib/restriction-service')
+jest.mock('@/ai/genkit', () => ({
+  genkit: jest.fn(),
+}))
+jest.mock('@/ai/flows/apply-restrictions-to-scene', () => ({
+  applyRestrictionsToScene: jest.fn(),
+}))
+jest.mock('@/lib/mood-engine')
+jest.mock('@/lib/narrative-journal', () => ({
+  narrativeJournal: {
+    logScene: jest.fn()
+  }
+}))
+
 import { DreamweaverDirector } from '@/lib/dreamweaver-director'
 import { ReferenceShelf } from '@/lib/narrative-service'
 import { MoodEngine } from '@/lib/mood-engine'
@@ -16,25 +33,49 @@ import {
   waitFor
 } from '../utils/test-helpers'
 
-// Mock all dependencies
-jest.mock('@/lib/narrative-service')
-jest.mock('@/lib/mood-engine')
-jest.mock('@/lib/narrative-journal')
-jest.mock('@/lib/scene-assembler')
-jest.mock('@/lib/restriction-service')
+// Mock instances
+let mockSceneAssembler: jest.Mocked<SceneAssembler>
+let mockRestrictionService: jest.Mocked<RestrictionService>
+let mockReferenceShelf: jest.Mocked<ReferenceShelf>;
+let mockMoodEngine: jest.Mocked<MoodEngine>;
+const mockJournal = jest.mocked(narrativeJournal)
 
 describe('DreamweaverDirector', () => {
   let director: DreamweaverDirector
 
   beforeEach(() => {
     director = new DreamweaverDirector()
+    
+    // Mock the methods on the actual instances using jest.spyOn
+    mockReferenceShelf = director.referenceShelf as jest.Mocked<ReferenceShelf>;
+    mockMoodEngine = director.moodEngine as jest.Mocked<MoodEngine>;
+    
+    // Replace the method implementations with mocks
+    mockReferenceShelf.getMoment = jest.fn();
+    mockReferenceShelf.snapshotParty = jest.fn();
+    mockReferenceShelf.getStories = jest.fn();
+    mockReferenceShelf.getStory = jest.fn();
+    mockReferenceShelf.getChapter = jest.fn();
+    mockReferenceShelf.getArc = jest.fn();
+    mockReferenceShelf.getMomentBundle = jest.fn();
+    mockReferenceShelf.getNPC = jest.fn();
+    mockReferenceShelf.listAvailableEquipment = jest.fn();
+    mockReferenceShelf.getEquipmentForParty = jest.fn();
+    mockReferenceShelf.getLoreByReference = jest.fn();
+    mockReferenceShelf.getSavedScenesForMoment = jest.fn();
+    
+    mockMoodEngine.getCurrentMood = jest.fn().mockReturnValue('Neutral');
+    mockMoodEngine.setMood = jest.fn();
+    mockMoodEngine.updateFromChoice = jest.fn();
+    
+    mockSceneAssembler = (director as any).sceneAssembler as jest.Mocked<SceneAssembler>
+    mockRestrictionService = (director as any).restrictionService as jest.Mocked<RestrictionService>
 
-    // Setup default mocks using jest.spyOn for public properties
-    jest.spyOn(director.moodEngine, 'getCurrentMood').mockReturnValue('neutral' as any)
-    jest.spyOn(director.journal, 'logScene').mockImplementation(() => {})
+    // Setup default mocks
+    ;(director.journal.logScene as jest.Mock).mockImplementation(() => {})
 
-    // Mock private dependencies by spying on the constructor calls
-    jest.clearAllMocks()
+    // Clear mocks before each test
+    jest.clearAllMocks();
   })
 
   describe('generateScene', () => {
@@ -46,17 +87,19 @@ describe('DreamweaverDirector', () => {
     const mockMoment = createMockMoment()
 
     beforeEach(() => {
-      jest.spyOn(director.referenceShelf, 'getMoment').mockResolvedValue(mockMoment)
-      jest.spyOn(director.referenceShelf, 'snapshotParty').mockResolvedValue({
+      // Mocks are set in individual tests to avoid chaining issues
+    })
+
+    it('should successfully generate a scene with valid inputs', async () => {
+      // Arrange
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue({
         partyId: 'test-party',
         members: [],
         affinities: {},
         statusEffects: [],
       })
-    })
 
-    it('should successfully generate a scene with valid inputs', async () => {
-      // Arrange
       const expectedSceneDescriptor = createMockSceneDescriptor({
         sceneId: generateTestId('scene'),
         dreamweaverPersonality: mockPersonality
@@ -69,7 +112,6 @@ describe('DreamweaverDirector', () => {
       mockSceneAssembler.buildScene.mockResolvedValue(expectedSceneDescriptor)
       mockRestrictionService.applyRestrictions.mockResolvedValue(restrictionResult)
 
-      // Act
       const result = await director.generateScene(
         mockStoryId,
         mockChapterId,
@@ -93,7 +135,7 @@ describe('DreamweaverDirector', () => {
           chapterId: mockChapterId,
           arcId: mockArcId,
           momentId: mockMomentId,
-          currentMood: 'neutral',
+          currentMood: 'Neutral',
           environmentState: 'Calm, early evening',
         }),
         mockPersonality
@@ -104,14 +146,13 @@ describe('DreamweaverDirector', () => {
         undefined
       )
       expect(mockJournal.logScene).toHaveBeenCalledWith(expectedSceneDescriptor)
-
       expect(result).toEqual(expectedSceneDescriptor)
       validateSceneDescriptorStructure(result)
     })
 
     it('should handle moment not found error', async () => {
       // Arrange
-      mockReferenceShelf.getMoment.mockResolvedValue(null)
+      mockReferenceShelf.getMoment.mockResolvedValue(undefined)
 
       // Act & Assert
       await expect(
@@ -134,6 +175,24 @@ describe('DreamweaverDirector', () => {
         appliedRestrictions: ['no-violence', 'no-adult-content']
       }
 
+      const testComplexPartySnapshot = {
+        partyId: 'complex-party',
+        members: [
+          { id: '1', name: 'Hero', class: 'Warrior', level: 15 },
+          { id: '2', name: 'Mage', class: 'Wizard', level: 12 },
+          { id: '3', name: 'Rogue', class: 'Thief', level: 10 },
+        ],
+        affinities: {
+          courage: 85,
+          wisdom: 70,
+          loyalty: 90,
+        },
+        statusEffects: ['blessed', 'inspired', 'determined'],
+      }
+
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue(testComplexPartySnapshot)
+      mockMoodEngine.getCurrentMood.mockReturnValue('Neutral')
       mockSceneAssembler.buildScene.mockResolvedValue(expectedSceneDescriptor)
       mockRestrictionService.applyRestrictions.mockResolvedValue(restrictionResult)
 
@@ -160,7 +219,7 @@ describe('DreamweaverDirector', () => {
       const expectedSceneDescriptor = createMockSceneDescriptor({
         diagnostics: {
           appliedRestrictions: [],
-          moodAdjustments: ['neutral'],
+          moodAdjustments: ['Neutral'],
           branchForecast: 'Scene will branch to 2 paths'
         }
       })
@@ -169,6 +228,13 @@ describe('DreamweaverDirector', () => {
         appliedRestrictions: ['content-filtered', 'mood-adjusted']
       }
 
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue({
+        partyId: 'test-party',
+        members: [],
+        affinities: {},
+        statusEffects: [],
+      })
       mockSceneAssembler.buildScene.mockResolvedValue(expectedSceneDescriptor)
       mockRestrictionService.applyRestrictions.mockResolvedValue(restrictionResult)
 
@@ -200,6 +266,13 @@ describe('DreamweaverDirector', () => {
       mockRestrictionService.applyRestrictions.mockResolvedValue({
         filteredContent: expectedSceneDescriptor.narrativeText,
         appliedRestrictions: []
+      })
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue({
+        partyId: 'test-party',
+        members: [],
+        affinities: {},
+        statusEffects: [],
       })
 
       // Act & Assert
@@ -236,8 +309,9 @@ describe('DreamweaverDirector', () => {
           loyalty: 90,
         },
         statusEffects: ['blessed', 'inspired', 'determined'],
-      }
+      };
 
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
       mockReferenceShelf.snapshotParty.mockResolvedValue(complexPartySnapshot)
 
       const expectedSceneDescriptor = createMockSceneDescriptor()
@@ -272,6 +346,14 @@ describe('DreamweaverDirector', () => {
       const expectedSceneDescriptor = createMockSceneDescriptor()
       const restrictionError = new Error('Restriction application failed')
 
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue({
+        partyId: 'test-party',
+        members: [],
+        affinities: {},
+        statusEffects: [],
+      })
+      mockMoodEngine.getCurrentMood.mockReturnValue('Neutral')
       mockSceneAssembler.buildScene.mockResolvedValue(expectedSceneDescriptor)
       mockRestrictionService.applyRestrictions.mockRejectedValue(restrictionError)
 
@@ -290,6 +372,15 @@ describe('DreamweaverDirector', () => {
     it('should handle scene assembler errors', async () => {
       // Arrange
       const assemblerError = new Error('Scene assembly failed')
+      
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue({
+        partyId: 'test-party',
+        members: [],
+        affinities: {},
+        statusEffects: [],
+      })
+      mockMoodEngine.getCurrentMood.mockReturnValue('Neutral')
       mockSceneAssembler.buildScene.mockRejectedValue(assemblerError)
 
       // Act & Assert
@@ -324,6 +415,7 @@ describe('DreamweaverDirector', () => {
     it('should handle party snapshot errors', async () => {
       // Arrange
       const snapshotError = new Error('Failed to snapshot party')
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
       mockReferenceShelf.snapshotParty.mockRejectedValue(snapshotError)
 
       // Act & Assert
@@ -340,6 +432,13 @@ describe('DreamweaverDirector', () => {
 
     it('should handle mood engine errors', async () => {
       // Arrange
+      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
+      mockReferenceShelf.snapshotParty.mockResolvedValue({
+        partyId: 'test-party',
+        members: [],
+        affinities: {},
+        statusEffects: [],
+      })
       mockMoodEngine.getCurrentMood.mockImplementation(() => {
         throw new Error('Mood engine failed')
       })
@@ -358,18 +457,18 @@ describe('DreamweaverDirector', () => {
   })
 
   describe('planNextScene', () => {
-    it('should return null when moment has no branching hooks', () => {
+    it('should return null when moment has no branching hooks', async () => {
       // Arrange
       const momentWithoutHooks = createMockMoment({ branchingHooks: [] })
 
       // Act
-      const result = director.planNextScene(momentWithoutHooks)
+      const result = await director.planNextScene(momentWithoutHooks)
 
       // Assert
       expect(result).toBeNull()
     })
 
-    it('should return the target moment ID of the highest weight branch', () => {
+    it('should return the target moment ID of the highest weight branch', async () => {
       // Arrange
       const highWeightBranch = {
         hookId: 'high-weight',
@@ -389,13 +488,13 @@ describe('DreamweaverDirector', () => {
       })
 
       // Act
-      const result = director.planNextScene(momentWithBranches)
+      const result = await director.planNextScene(momentWithBranches)
 
       // Assert
       expect(result).toBe(highWeightBranch.targetMomentId)
     })
 
-    it('should handle moment with single branching hook', () => {
+    it('should handle moment with single branching hook', async () => {
       // Arrange
       const singleBranch = {
         hookId: 'single-branch',
@@ -409,13 +508,13 @@ describe('DreamweaverDirector', () => {
       })
 
       // Act
-      const result = director.planNextScene(momentWithSingleBranch)
+      const result = await director.planNextScene(momentWithSingleBranch)
 
       // Assert
       expect(result).toBe(singleBranch.targetMomentId)
     })
 
-    it('should handle equal weight branches by returning the first one', () => {
+    it('should handle equal weight branches by returning the first one', async () => {
       // Arrange
       const branch1 = {
         hookId: 'branch1',
@@ -435,13 +534,13 @@ describe('DreamweaverDirector', () => {
       })
 
       // Act
-      const result = director.planNextScene(momentWithEqualBranches)
+      const result = await director.planNextScene(momentWithEqualBranches)
 
       // Assert
       expect(result).toBe(branch1.targetMomentId)
     })
 
-    it('should handle complex branching conditions', () => {
+    it('should handle complex branching conditions', async () => {
       // Arrange
       const complexBranches = [
         {
@@ -469,13 +568,13 @@ describe('DreamweaverDirector', () => {
       })
 
       // Act
-      const result = director.planNextScene(momentWithComplexBranches)
+      const result = await director.planNextScene(momentWithComplexBranches)
 
       // Assert
       expect(result).toBe(complexBranches[2].targetMomentId) // Highest weight
     })
 
-    it('should handle zero weight branches', () => {
+    it('should handle zero weight branches', async () => {
       // Arrange
       const zeroWeightBranch = {
         hookId: 'zero-weight',
@@ -495,7 +594,7 @@ describe('DreamweaverDirector', () => {
       })
 
       // Act
-      const result = director.planNextScene(momentWithZeroWeight)
+      const result = await director.planNextScene(momentWithZeroWeight)
 
       // Assert
       expect(result).toBe(normalBranch.targetMomentId)
@@ -537,14 +636,14 @@ describe('DreamweaverDirector', () => {
         ],
         affinities: { courage: 85, wisdom: 70 },
         statusEffects: ['blessed'],
-      }
+      };
 
       mockReferenceShelf.getMoment.mockResolvedValue(complexMoment)
       mockReferenceShelf.snapshotParty.mockResolvedValue(complexPartySnapshot)
-      mockMoodEngine.getCurrentMood.mockReturnValue('adventurous')
+      mockMoodEngine.getCurrentMood.mockReturnValue('Joyful')
 
       const expectedSceneDescriptor = createMockSceneDescriptor({
-        mood: 'adventurous',
+        mood: 'Joyful',
         partyHighlights: ['Hero (Warrior Lvl 15)', 'Mage (Wizard Lvl 12)'],
       })
 
@@ -567,11 +666,11 @@ describe('DreamweaverDirector', () => {
 
       // Assert
       expect(result).toBeDefined()
-      expect(result.mood).toBe('adventurous')
+      expect(result.mood).toBe('Joyful')
       expect(mockJournal.logScene).toHaveBeenCalledWith(expectedSceneDescriptor)
 
       // Test next scene planning
-      const nextMomentId = director.planNextScene(complexMoment)
+      const nextMomentId = await director.planNextScene(complexMoment)
       expect(nextMomentId).toBe('advanced_moment') // Highest weight branch
     })
 
@@ -582,9 +681,9 @@ describe('DreamweaverDirector', () => {
       const arcId = generateTestId('arc')
       const momentId = generateTestId('moment')
 
-      const mockMoment = createMockMoment()
-      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
-      mockReferenceShelf.snapshotParty.mockResolvedValue({
+      const mockMomentForConcurrent = createMockMoment()
+      ;(director.referenceShelf.getMoment as jest.Mock).mockResolvedValue(mockMomentForConcurrent)
+      ;(director.referenceShelf.snapshotParty as jest.Mock).mockResolvedValue({
         partyId: 'test-party',
         members: [],
         affinities: {},
@@ -618,7 +717,7 @@ describe('DreamweaverDirector', () => {
     it('should handle malformed moment data', async () => {
       // Arrange
       const malformedMoment = { id: 'malformed' } as any
-      mockReferenceShelf.getMoment.mockResolvedValue(malformedMoment)
+      (director.referenceShelf.getMoment as jest.Mock).mockResolvedValue(malformedMoment)
 
       // Act & Assert
       await expect(
@@ -634,7 +733,7 @@ describe('DreamweaverDirector', () => {
 
     it('should handle missing party snapshot gracefully', async () => {
       // Arrange
-      mockReferenceShelf.snapshotParty.mockResolvedValue(null as any)
+      (director.referenceShelf.snapshotParty as jest.Mock).mockResolvedValue(null as any)
 
       const expectedSceneDescriptor = createMockSceneDescriptor()
       mockSceneAssembler.buildScene.mockResolvedValue(expectedSceneDescriptor)
@@ -657,9 +756,9 @@ describe('DreamweaverDirector', () => {
 
     it('should handle journal logging errors gracefully', async () => {
       // Arrange
-      const mockMoment = createMockMoment()
-      mockReferenceShelf.getMoment.mockResolvedValue(mockMoment)
-      mockReferenceShelf.snapshotParty.mockResolvedValue({
+      const mockMomentForJournal = createMockMoment()
+      ;(director.referenceShelf.getMoment as jest.Mock).mockResolvedValue(mockMomentForJournal)
+      ;(director.referenceShelf.snapshotParty as jest.Mock).mockResolvedValue({
         partyId: 'test-party',
         members: [],
         affinities: {},

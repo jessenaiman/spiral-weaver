@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Story, Chapter, Arc, Moment } from '@/lib/types';
+import { Story } from '@/lib/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';

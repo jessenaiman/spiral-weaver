@@ -1,4 +1,6 @@
 
+import type { ChoiceResult } from './types';
+
 type Mood = 'Neutral' | 'Tense' | 'Joyful' | 'Somber' | 'Anticipation';
 
 /**
@@ -31,7 +33,7 @@ export class MoodEngine {
    * Updates the mood based on a scene's outcome or player choice.
    * This is a placeholder for more complex logic.
    */
-  updateFromChoice(choiceResult: any) {
+  updateFromChoice(choiceResult: ChoiceResult) {
     // Example logic:
     if (choiceResult.leadsToConflict) {
       this.setMood('Tense');

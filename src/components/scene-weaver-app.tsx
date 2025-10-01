@@ -61,7 +61,6 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
         
         if (savedScenes) {
             // If scenes are saved, just display them without calling the full action
-            const newState: GenerateSceneState = { data: savedScenes, error: null, isLoadedFromSave: true };
             // This is tricky because useActionState doesn't let us set state directly.
             // A better refactor would be to separate loading from generating.
             // For now, we'll trigger the form to get the same effect.
@@ -89,7 +88,7 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
           <NarrativeBrowser 
             story={story}
             onSelect={handleSelect}
-            selectedItemId={selectedItem?.data.id}
+            selectedItemId={selectedItem?.data.id || null}
           />
         </SidebarContent>
       </Sidebar>

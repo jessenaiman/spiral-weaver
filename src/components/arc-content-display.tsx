@@ -1,6 +1,6 @@
 'use client';
 
-import { Arc, Moment } from '@/lib/types';
+import { Moment } from '@/lib/types';
 import { SelectedItem } from './scene-weaver-app';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';

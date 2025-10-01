@@ -1,11 +1,11 @@
-import { SceneDescriptor, DreamweaverPersonality } from '@/lib/types'
+import { SceneDescriptor, DreamweaverPersonality, PartySnapshot, PartyMember, EquipmentHighlight, BranchOption, SceneDiagnostics } from '@/lib/types'
 
 export interface SceneInput {
   momentId: string
   content: string
   chapterId: string
   arcId: string
-  partySnapshot: any
+  partySnapshot: PartySnapshot
   environmentState: string
   currentMood: string
   dreamweaverPersonality: DreamweaverPersonality
@@ -129,27 +129,27 @@ function generateRecommendedChoices(input: SceneInput): string[] {
   return choices.slice(0, 2) // Return max 2 choices
 }
 
-function generatePartyHighlights(partySnapshot: any): string[] {
+function generatePartyHighlights(partySnapshot: PartySnapshot): string[] {
   if (!partySnapshot?.members) return []
 
-  return partySnapshot.members.map((member: any) =>
+  return partySnapshot.members.map((member: PartyMember) =>
     `${member.name} (${member.class} Lvl ${member.level})`
   )
 }
 
-function generateEquipmentHighlights(partySnapshot: any): any[] {
+function generateEquipmentHighlights(partySnapshot: PartySnapshot): EquipmentHighlight[] {
   if (!partySnapshot?.members) return []
 
   // Generate some equipment highlights based on party members
-  return partySnapshot.members.slice(0, 2).map((member: any) => ({
+  return partySnapshot.members.slice(0, 2).map((member: PartyMember) => ({
     itemId: `item_${member.id}`,
     name: `${member.name}'s Primary Weapon`,
     usageNotes: `Essential for ${member.class} combat maneuvers`,
   }))
 }
 
-function generateBranchOptions(input: SceneInput): any[] {
-  const options = [
+function generateBranchOptions(input: SceneInput): BranchOption[] {
+  const options: BranchOption[] = [
     {
       prompt: 'Follow the obvious path forward',
       targetMomentId: `next_${input.momentId}`,
@@ -174,7 +174,7 @@ function generateBranchOptions(input: SceneInput): any[] {
   return options
 }
 
-function generateDiagnostics(input: SceneInput): any {
+function generateDiagnostics(input: SceneInput): SceneDiagnostics {
   return {
     appliedRestrictions: input.content.includes('restricted') ? ['content_warning'] : [],
     moodAdjustments: [input.currentMood],

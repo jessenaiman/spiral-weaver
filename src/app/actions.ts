@@ -49,7 +49,7 @@ async function getSavedScenes(): Promise<Record<string, SceneDescriptor[]>> {
     try {
         const fileContent = await fs.readFile(savedScenesPath, 'utf-8');
         return JSON.parse(fileContent);
-    } catch (e) {
+    } catch {
         // If file doesn't exist or is invalid JSON, return empty object
         return {};
     }

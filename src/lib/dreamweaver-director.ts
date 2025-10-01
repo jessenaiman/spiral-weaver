@@ -53,7 +53,7 @@ export class DreamweaverDirector {
     };
 
     // Step 2: Delegate scene assembly to the SceneAssembler, now with personality.
-    let sceneDescriptor = await this.sceneAssembler.buildScene(moment, context, dreamweaverPersonality);
+    const sceneDescriptor = await this.sceneAssembler.buildScene(moment, context, dreamweaverPersonality);
 
     // Step 3: Delegate restriction application to the RestrictionService.
     const filteredResult = await this.restrictionService.applyRestrictions(
@@ -86,7 +86,7 @@ export class DreamweaverDirector {
 
     // Simple logic: pick the branch with the highest weight
     const nextBranch = currentMoment.branchingHooks.reduce((prev, current) => 
-      (prev.weight > current.weight) ? prev : current
+      (prev.weight >= current.weight) ? prev : current
     );
 
     return nextBranch.targetMomentId;

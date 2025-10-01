@@ -1,4 +1,4 @@
-import type { PartySnapshot, PartyMember } from './types';
+import type { PartySnapshot, PartyMember, NPCData, PersonaState } from './types';
 import partyData from './data/sample-party.json';
 
 /**
@@ -7,8 +7,8 @@ import partyData from './data/sample-party.json';
  */
 export class CharacterLedger {
   private party: PartySnapshot;
-  private npcRegistry: Map<string, any>; // Using any for flexibility with NPC data
-  private personaStates: Map<string, Record<string, any>>; // Flexible state tracking
+  private npcRegistry: Map<string, NPCData>;
+  private personaStates: Map<string, PersonaState>;
 
   constructor() {
     this.party = partyData as PartySnapshot;
@@ -56,42 +56,42 @@ export class CharacterLedger {
   /**
    * Adds or updates an NPC in the registry
    */
-  setNPC(npcId: string, npcData: any): void {
+  setNPC(npcId: string, npcData: NPCData): void {
     this.npcRegistry.set(npcId, npcData);
   }
 
   /**
    * Gets an NPC from the registry
    */
-  getNPC(npcId: string): any {
+  getNPC(npcId: string): NPCData | undefined {
     return this.npcRegistry.get(npcId);
   }
 
   /**
    * Gets the entire NPC registry
    */
-  getNPCRegistry(): Map<string, any> {
+  getNPCRegistry(): Map<string, NPCData> {
     return new Map(this.npcRegistry); // Return a copy
   }
 
   /**
    * Gets persona state for a character
    */
-  getPersonaState(characterId: string): Record<string, any> | undefined {
+  getPersonaState(characterId: string): PersonaState | undefined {
     return this.personaStates.get(characterId);
   }
 
   /**
    * Sets persona state for a character
    */
-  setPersonaState(characterId: string, state: Record<string, any>): void {
+  setPersonaState(characterId: string, state: PersonaState): void {
     this.personaStates.set(characterId, { ...state });
   }
 
   /**
    * Updates specific fields in a character's persona state
    */
-  updatePersonaState(characterId: string, stateUpdates: Partial<Record<string, any>>): void {
+  updatePersonaState(characterId: string, stateUpdates: Partial<PersonaState>): void {
     const currentState = this.personaStates.get(characterId) || {};
     this.personaStates.set(characterId, { ...currentState, ...stateUpdates });
   }

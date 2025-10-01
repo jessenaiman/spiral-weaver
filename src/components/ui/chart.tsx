@@ -78,7 +78,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
   return (
     <style
-      // eslint-disable-next-line xss/no-mixed-html
+      // eslint-disable-next-line @next/next/no-dangerous-html
       dangerouslySetInnerHTML={{
         __html: Object.entries(THEMES)
           .map(

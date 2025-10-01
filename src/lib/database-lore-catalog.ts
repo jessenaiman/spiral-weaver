@@ -131,7 +131,7 @@ export class DatabaseLoreCatalog {
    * @returns Promise resolving to an array of Moment objects.
    */
   async getMomentBundle(chapterId?: string, arcId?: string): Promise<Moment[]> {
-    let where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (arcId) {
       where.arcId = arcId;
@@ -165,7 +165,7 @@ export class DatabaseLoreCatalog {
    * @param chapterData The chapter data to save.
    * @returns Promise resolving to the upserted Chapter.
    */
-  async saveChapter(storyId: string, chapterData: { chapterId: string; name: string; synopsis: string; metadata?: any }): Promise<Chapter> {
+  async saveChapter(storyId: string, chapterData: { chapterId: string; name: string; synopsis: string; metadata?: Record<string, unknown> }): Promise<Chapter> {
     return this.prisma.chapter.upsert({
       where: { chapterId: chapterData.chapterId },
       update: { ...chapterData, storyId, metadata: chapterData.metadata ? JSON.stringify(chapterData.metadata) : '{}' },
@@ -202,7 +202,7 @@ export class DatabaseLoreCatalog {
       });
     } else {
       return this.prisma.moment.create({
-        data: { ...data, arcId } as any,
+        data: { ...data, arcId } as Omit<Moment, 'id' | 'arcId' | 'chapterId' | 'storyId'> & { arcId: string },
       });
     }
   }

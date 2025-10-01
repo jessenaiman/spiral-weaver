@@ -19,15 +19,16 @@ const customJestConfig = {
   coverageDirectory: 'coverage',
   testMatch: [
     '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
+    '<rootDir>/tests/**/*.spec.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/tests/e2e/', '<rootDir>/tests/integration/'],
   transformIgnorePatterns: [
-    '/node_modules/',
+    '/node_modules/(?!(@genkit-ai|genkit|dotprompt|yaml)/)',
     '^.+\\.module\\.(css|sass|scss)$',
   ],
 }

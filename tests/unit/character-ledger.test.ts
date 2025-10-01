@@ -58,13 +58,16 @@ describe('CharacterLedger', () => {
 
   test('should manage NPC registry', () => {
     // Test setting an NPC
-    characterLedger.setNPC('npc-001', { name: 'Guard', location: 'Gate' });
+    characterLedger.setNPC('npc-001', { id: 'npc-001', name: 'Guard', type: 'Guard', location: 'Gate' });
     
     // Test getting the NPC
     const npc = characterLedger.getNPC('npc-001');
     expect(npc).toBeDefined();
-    expect(npc.name).toBe('Guard');
-    expect(npc.location).toBe('Gate');
+    if (npc) {
+      expect(npc.name).toBe('Guard');
+      expect(npc.location).toBe('Gate');
+      expect(npc.type).toBe('Guard');
+    }
   });
 
   test('should return undefined for non-existent NPC', () => {

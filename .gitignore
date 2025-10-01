@@ -49,3 +49,4 @@ firestore-debug.log
 .ruru/
 .roo/
 test-results/
+scripts/
