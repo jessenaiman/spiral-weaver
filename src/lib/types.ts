@@ -49,7 +49,7 @@ export interface Chapter {
   name: string;
   synopsis: string;
   arcs: Arc[];
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   title: string; // for display
   storyId: string;
 }
@@ -125,7 +125,7 @@ export interface RuntimeContext {
   currentMood: string;
 }
 
-// 1.3 Demo Flow
+// 1.4 Character and NPC Types
 export interface SceneDeskViewModel {
   stories: Story[];
   chapters: Chapter[];
@@ -133,4 +133,69 @@ export interface SceneDeskViewModel {
   moments: Moment[];
   currentScene?: SceneDescriptor;
   diagnostics?: SceneDiagnostics;
+}
+
+// 1.5 Raw Data Types
+export interface RawStoryData {
+  storyId: string;
+  title: string;
+  summary: string;
+  chapters: RawChapterData[];
+}
+
+export interface RawChapterData {
+  chapterId: string;
+  name: string;
+  synopsis: string;
+  metadata?: Record<string, unknown>;
+  arcs: RawArcData[];
+}
+
+export interface RawArcData {
+  arcId: string;
+  label: string;
+  theme: string;
+  title?: string;
+  moments: RawMomentData[];
+}
+
+export interface RawMomentData {
+  momentId: string;
+  title: string;
+  content: string;
+  timeline: string[];
+  themes: string[];
+  lore: string[];
+  subtext: string[];
+  branchingHooks: BranchingHook[];
+  sensoryAnchors: string[];
+  loreRefs: LoreReference[];
+  restrictionTags: string[];
+}
+
+// 1.6 Character and NPC Types
+export interface NPCData {
+  id: string;
+  name: string;
+  type: string;
+  description?: string;
+  location?: string;
+  status?: string;
+  [key: string]: unknown; // Allow additional properties
+}
+
+export interface PersonaState {
+  mood?: string;
+  health?: number;
+  affinity?: Record<string, number>;
+  statusEffects?: string[];
+  [key: string]: unknown; // Allow additional properties
+}
+
+// 1.7 Mood Engine Types
+export interface ChoiceResult {
+  leadsToConflict?: boolean;
+  isPositiveResolution?: boolean;
+  moodImpact?: string;
+  [key: string]: unknown; // Allow additional properties
 }

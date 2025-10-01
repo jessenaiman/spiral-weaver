@@ -1,4 +1,4 @@
-import type { Story, Chapter, Arc, Moment } from './types';
+import type { Story, Chapter, Arc, Moment, RawStoryData, RawChapterData, RawArcData, RawMomentData } from './types';
 import narrativeData from './data/sample-narrative.json';
 
 /**
@@ -24,7 +24,7 @@ export class LoreCatalog {
   private loadNarrativeData() {
     const narrative = narrativeData;
     if (narrative.stories && narrative.stories.length > 0) {
-      narrative.stories.forEach((storyData: any) => {
+      narrative.stories.forEach((storyData: RawStoryData) => {
         const story: Story = {
           id: storyData.storyId,
           title: storyData.title,
@@ -32,18 +32,18 @@ export class LoreCatalog {
           chapters: [],
         };
 
-        storyData.chapters.forEach((chapterData: any) => {
+        storyData.chapters.forEach((chapterData: RawChapterData) => {
           const chapter: Chapter = {
             id: chapterData.chapterId,
             name: chapterData.name,
             synopsis: chapterData.synopsis,
-            metadata: chapterData.metadata,
+            metadata: chapterData.metadata || {},
             title: chapterData.name,
             storyId: story.id,
             arcs: [],
           };
 
-          chapterData.arcs.forEach((arcData: any) => {
+          chapterData.arcs.forEach((arcData: RawArcData) => {
             const arc: Arc = {
               id: arcData.arcId,
               label: arcData.label,
@@ -54,7 +54,7 @@ export class LoreCatalog {
               moments: [],
             };
 
-            arcData.moments.forEach((momentData: any) => {
+            arcData.moments.forEach((momentData: RawMomentData) => {
               const moment: Moment = {
                 ...momentData,
                 id: momentData.momentId,
