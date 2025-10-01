@@ -1,0 +1,69 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e7]:
+        - generic [ref=e9]:
+          - img [ref=e10]
+          - generic [ref=e12]: Scene Weaver
+        - generic [ref=e14]:
+          - generic [ref=e15]:
+            - generic [ref=e17]:
+              - img [ref=e18]
+              - text: Restriction Service
+            - textbox "Restriction Service" [ref=e21]
+          - button "Omega Spiral" [ref=e23] [cursor=pointer]:
+            - img [ref=e24] [cursor=pointer]
+            - text: Omega Spiral
+          - generic [ref=e29]:
+            - heading "The Forging and The Fall" [level=3] [ref=e31]:
+              - button "The Forging and The Fall" [ref=e32] [cursor=pointer]:
+                - generic [ref=e33] [cursor=pointer]:
+                  - img [ref=e34] [cursor=pointer]
+                  - text: The Forging and The Fall
+                - img [ref=e37] [cursor=pointer]
+            - heading "The Silent Awakening" [level=3] [ref=e40]:
+              - button "The Silent Awakening" [ref=e41] [cursor=pointer]:
+                - generic [ref=e42] [cursor=pointer]:
+                  - img [ref=e43] [cursor=pointer]
+                  - text: The Silent Awakening
+                - img [ref=e46] [cursor=pointer]
+            - heading "The Cataclysm" [level=3] [ref=e49]:
+              - button "The Cataclysm" [ref=e50] [cursor=pointer]:
+                - generic [ref=e51] [cursor=pointer]:
+                  - img [ref=e52] [cursor=pointer]
+                  - text: The Cataclysm
+                - img [ref=e55] [cursor=pointer]
+      - main [ref=e57]:
+        - generic [ref=e59]:
+          - button "Toggle Sidebar" [ref=e60] [cursor=pointer]:
+            - img
+            - generic [ref=e61] [cursor=pointer]: Toggle Sidebar
+          - heading "Dreamweaver Scene Desk" [level=1] [ref=e62]
+        - generic [ref=e63]:
+          - generic [ref=e65]:
+            - generic [ref=e67]:
+              - generic [ref=e68]:
+                - generic [ref=e69]: Scene Display
+                - generic [ref=e70]: The generated scenes will appear here.
+              - generic [ref=e71]:
+                - button "Generate Scenes" [disabled]:
+                  - img
+                  - text: Generate Scenes
+            - generic [ref=e73]:
+              - img [ref=e74]
+              - heading "Select a Moment" [level=3] [ref=e77]
+              - paragraph [ref=e78]: Choose a moment from the narrative browser on the left to generate scenes.
+          - generic [ref=e80]:
+            - generic [ref=e82]:
+              - img [ref=e83]
+              - text: Diagnostics
+            - paragraph [ref=e96]: Generate a scene to see diagnostic information.
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e97]
+  - button "Open Next.js Dev Tools" [ref=e103] [cursor=pointer]:
+    - img [ref=e104] [cursor=pointer]
+```

@@ -3,7 +3,6 @@
 import { Arc, Chapter, Moment, Story } from '@/lib/types';
 import { SelectedItem } from './scene-weaver-app';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Icons } from './icons';
 
 interface NarrativeContentDisplayProps {
   item: SelectedItem;
@@ -75,7 +74,20 @@ export default function NarrativeContentDisplay({ item }: NarrativeContentDispla
         <TabsContent value="lore" className="mt-4">
           <Section title="Lore">
             <ul className="list-disc list-inside">
-              {data.lore.map((l, i) => <li key={i} dangerouslySetInnerHTML={{ __html: l.replace(/\*(.*?)\*/g, '<strong>$1</strong>') }}></li>)}
+              {data.lore.map((l, i) => {
+                // Parse simple markdown-like bold syntax (*text* -> <strong>text</strong>)
+                const parts = l.split(/(\*[^*]+\*)/g);
+                return (
+                  <li key={i}>
+                    {parts.map((part, partIndex) => {
+                      if (part.startsWith('*') && part.endsWith('*')) {
+                        return <strong key={partIndex}>{part.slice(1, -1)}</strong>;
+                      }
+                      return part;
+                    })}
+                  </li>
+                );
+              })}
             </ul>
           </Section>
         </TabsContent>
@@ -85,7 +97,20 @@ export default function NarrativeContentDisplay({ item }: NarrativeContentDispla
         <TabsContent value="subtext" className="mt-4">
           <Section title="Subtext">
             <ul className="list-disc list-inside">
-              {data.subtext.map((s, i) => <li key={i} dangerouslySetInnerHTML={{ __html: s.replace(/\*(.*?)\*/g, '<strong>$1</strong>') }}></li>)}
+              {data.subtext.map((s, i) => {
+                // Parse simple markdown-like bold syntax (*text* -> <strong>text</strong>)
+                const parts = s.split(/(\*[^*]+\*)/g);
+                return (
+                  <li key={i}>
+                    {parts.map((part, partIndex) => {
+                      if (part.startsWith('*') && part.endsWith('*')) {
+                        return <strong key={partIndex}>{part.slice(1, -1)}</strong>;
+                      }
+                      return part;
+                    })}
+                  </li>
+                );
+              })}
             </ul>
           </Section>
         </TabsContent>

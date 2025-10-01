@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useActionState } from 'react';
 import { reviewScenesAction, type ReviewState } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SceneDescriptor, SceneDiagnostics } from '@/lib/types';
+import { SceneDescriptor } from '@/lib/types';
 import { Icons } from './icons';
 import { Button } from './ui/button';
 import { useFormStatus } from 'react-dom';

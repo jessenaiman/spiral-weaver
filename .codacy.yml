@@ -1,0 +1,10 @@
+exclude_paths:
+  - "node_modules/**/*"
+  - ".next/**/*"
+  - "src/components/ui/**/*"
+  - "coverage/**/*"
+  - "playwright-report/**/*"
+  - "test-results/**/*"
+  - ".git/**/*"
+  - "dist/**/*"
+  - "build/**/*"

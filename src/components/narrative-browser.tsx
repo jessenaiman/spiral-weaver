@@ -38,7 +38,7 @@ export default function NarrativeBrowser({ story, onSelect, selectedItemId }: Na
 
       <div className="px-2 group-data-[collapsible=icon]:hidden">
         <button
-          onClick={() => onSelect({ type: 'story', data: story })}
+          onClick={() => { onSelect({ type: 'story', data: story }); }}
           className={cn(
             "w-full text-left p-2 rounded-md flex items-center gap-2 hover:bg-accent transition-colors font-semibold",
             selectedItemId === story.id && "bg-accent text-accent-foreground"
@@ -70,7 +70,7 @@ export default function NarrativeBrowser({ story, onSelect, selectedItemId }: Na
                   {chapter.arcs.map((arc) => (
                     <AccordionItem value={arc.id} key={arc.id}>
                       <AccordionTrigger
-                        onClick={() => onSelect({ type: 'arc', data: arc })}
+                        onClick={() => { onSelect({ type: 'arc', data: arc }); }}
                         className={cn(
                           "p-2 -ml-2 rounded-md hover:bg-accent transition-colors",
                           selectedItemId === arc.id && "bg-accent text-accent-foreground"

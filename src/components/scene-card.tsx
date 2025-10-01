@@ -1,7 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import type { SceneDescriptor } from '@/lib/types';
 import { Icons } from './icons';
 

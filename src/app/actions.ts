@@ -73,7 +73,7 @@ export async function generateSceneAction(
 
     // Check if scenes are already saved
     const savedScenes = await getSavedScenes();
-    if (savedScenes[momentId]) {
+    if (savedScenes && typeof savedScenes === 'object' && savedScenes.hasOwnProperty(momentId)) {
       return { data: savedScenes[momentId], error: null, isLoadedFromSave: true };
     }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useActionState, useTransition } from 'react';
+import { useTransition } from 'react';
 import type { GenerateSceneState, SaveScenesState } from '@/app/actions';
 import { saveScenesAction } from '@/app/actions';
 import { Button } from './ui/button';

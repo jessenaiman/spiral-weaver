@@ -46,7 +46,7 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   const handleSelectMoment = (moment: Moment) => {
     const fullMoment = allMoments.find(m => m.id === moment.id);
     if(fullMoment) {
-      handleSelect({ type: 'moment', data: fullMoment });
+      void handleSelect({ type: 'moment', data: fullMoment });
     }
   };
   
