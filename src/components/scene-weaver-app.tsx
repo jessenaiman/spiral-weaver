@@ -15,7 +15,9 @@ import {
 import NarrativeBrowser from '@/components/narrative-browser';
 import SceneDisplay from '@/components/scene-display';
 import DiagnosticsPanel from '@/components/diagnostics-panel';
+import TestingDashboard from '@/components/testing-dashboard';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Icons } from './icons';
 import { ReferenceShelf } from '@/lib/narrative-service';
 
@@ -102,9 +104,16 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
             <input type="hidden" name="chapterId" value={selectedItem.data.chapterId} />
             <input type="hidden" name="arcId" value={selectedItem.data.arcId} />
             <input type="hidden" name="momentId" value={selectedItem.data.id} />
-             <textarea name="restrictions" defaultValue={
-                document.querySelector<HTMLTextAreaElement>('#restrictions')?.value
-             }></textarea>
+             <label htmlFor="restrictions" className="sr-only">Content Restrictions</label>
+             <textarea
+               id="restrictions"
+               name="restrictions"
+               placeholder="Enter any content restrictions or special instructions..."
+               defaultValue={
+                 document.querySelector<HTMLTextAreaElement>('#restrictions')?.value
+               }
+               className="sr-only"
+             />
           </>
         )}
       </form>
@@ -114,38 +123,51 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <SidebarTrigger />
-            <h1 className="font-headline text-2xl font-bold tracking-tight">Dreamweaver Scene Desk</h1>
+            <h1 className="font-headline text-2xl font-bold tracking-tight">Spiral Weaver</h1>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <SceneDisplay 
-              formAction={sceneAction}
-              formState={sceneState}
-              selectedItem={selectedItem}
-              onSelectMoment={handleSelectMoment}
-              moments={allMoments}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            {sceneState.data && sceneState.data.length > 0 ? (
-              <DiagnosticsPanel scenes={sceneState.data} />
-            ) : (
-               <Card className="h-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Icons.diagnostics />
-                    Diagnostics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Generate a scene to see diagnostic information.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </div>
+        <Tabs defaultValue="weaver" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="weaver">Scene Weaver</TabsTrigger>
+            <TabsTrigger value="testing">Bug Squashing Game</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="weaver" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <SceneDisplay
+                  formAction={sceneAction}
+                  formState={sceneState}
+                  selectedItem={selectedItem}
+                  onSelectMoment={handleSelectMoment}
+                  moments={allMoments}
+                />
+              </div>
+              <div className="lg:col-span-1">
+                {sceneState.data && sceneState.data.length > 0 ? (
+                  <DiagnosticsPanel scenes={sceneState.data} />
+                ) : (
+                   <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Icons.diagnostics />
+                        Diagnostics
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">Generate a scene to see diagnostic information.</p>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="testing" className="mt-6">
+            <TestingDashboard />
+          </TabsContent>
+        </Tabs>
       </SidebarInset>
     </SidebarProvider>
   );

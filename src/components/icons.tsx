@@ -12,6 +12,7 @@ import {
   Loader,
   Bot,
   View,
+  Cpu,
   type LucideProps,
 } from 'lucide-react';
 
@@ -30,4 +31,5 @@ export const Icons = {
   sparkles: Sparkles,
   dreamweaver: Bot,
   scene: View,
+  ai: Cpu,
 };

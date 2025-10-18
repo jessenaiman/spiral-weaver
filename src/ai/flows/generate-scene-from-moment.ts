@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { agentSystem } from '@/ai/qwen-agents';
 
 const GenerateSceneFromMomentInputSchema = z.object({
   momentId: z.string().describe('The ID of the moment to generate the scene from.'),
@@ -73,7 +74,40 @@ export type GenerateSceneFromMomentOutput = z.infer<
 export async function generateSceneFromMoment(
   input: GenerateSceneFromMomentInput
 ): Promise<GenerateSceneFromMomentOutput> {
-  return generateSceneFromMomentFlow(input);
+  try {
+    // First, generate the base scene using the original flow
+    const baseScene = await generateSceneFromMomentFlow(input);
+
+    // Then, enhance it using the Qwen agent collaboration system
+    const enhancedResult = await agentSystem.generateEnhancedScene({
+      baseScene,
+      input,
+      enhancementLevel: 'standard'
+    });
+
+    // Merge the enhanced content back into the original schema format
+    const finalScene: GenerateSceneFromMomentOutput = {
+      ...baseScene,
+      // Add quality enhancements from agents
+      narrativeText: enhancedResult.enhancedScene.narrativeText || baseScene.narrativeText,
+      diagnostics: {
+        ...baseScene.diagnostics,
+        agentEnhancements: {
+          qualityScore: enhancedResult.enhancedScene.qualityScore,
+          improvements: enhancedResult.enhancedScene.improvements,
+          validationPassed: enhancedResult.enhancedScene.validationPassed,
+          moodAnalysis: enhancedResult.analysis.moodAnalysis,
+          suggestions: enhancedResult.analysis.suggestions
+        }
+      }
+    };
+
+    return finalScene;
+  } catch (error) {
+    console.error('Error in enhanced scene generation:', error);
+    // Fallback to original flow if agent system fails
+    return generateSceneFromMomentFlow(input);
+  }
 }
 
 const prompt = ai.definePrompt({
