@@ -107,7 +107,7 @@ Following these standards ensures a healthy, maintainable, and collaborative cod
 
 ## TSDoc Format
 
-Use [TSDoc](https://tsdoc.org/) syntax when writing TypeScript
+Use [TSDoc](https://tsdoc.org/) syntax when .github/instructions/code-standard.instructions.mdwriting TypeScript
 
 Examples
 

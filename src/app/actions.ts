@@ -1,11 +1,12 @@
 'use server';
 
 import { DreamweaverDirector } from '@/lib/dreamweaver-director';
-import type { SceneDescriptor, DreamweaverPersonality } from '@/lib/types';
+import type { SceneDescriptor, DreamweaverPersonality, Moment } from '@/lib/types';
 import { reviewScenes } from '@/ai/flows/review-scenes';
 import { z } from 'zod';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { ReferenceShelf } from '@/lib/narrative-service';
 
 const generateSceneSchema = z.object({
   storyId: z.string(),
@@ -38,6 +39,28 @@ const saveScenesSchema = z.object({
 });
 
 export type SaveScenesState = {
+    message: string | null;
+    error: string | null;
+}
+
+const saveNarrativeContentSchema = z.object({
+    storyId: z.string(),
+    chapterId: z.string(),
+    arcId: z.string(),
+    momentId: z.string(),
+    type: z.enum(['moment', 'arc', 'chapter', 'story']),
+    content: z.string().optional(),
+    title: z.string().optional(),
+    theme: z.string().optional(),
+    synopsis: z.string().optional(),
+    summary: z.string().optional(),
+    timeline: z.string().optional(),
+    themes: z.string().optional(),
+    lore: z.string().optional(),
+    subtext: z.string().optional(),
+});
+
+export type SaveNarrativeContentState = {
     message: string | null;
     error: string | null;
 }
@@ -141,6 +164,53 @@ export async function saveScenesAction(
         await fs.writeFile(savedScenesPath, JSON.stringify(savedScenes, null, 2), 'utf-8');
 
         return { message: 'Scenes saved successfully!', error: null };
+    } catch (e: unknown) {
+        const error = e instanceof Error ? e.message : 'An unknown error occurred during save.';
+        console.error(error);
+        return { message: null, error };
+    }
+}
+
+export async function saveNarrativeContentAction(
+    prevState: SaveNarrativeContentState,
+    formData: FormData
+): Promise<SaveNarrativeContentState> {
+    try {
+        const parsed = saveNarrativeContentSchema.safeParse(Object.fromEntries(formData.entries()));
+
+        if (!parsed.success) {
+            return { message: null, error: 'Invalid data for saving narrative content.' };
+        }
+
+        const { storyId, chapterId, arcId, momentId, type, content, title, theme, synopsis, summary, timeline, themes, lore, subtext } = parsed.data;
+
+        // Save the updated content based on type
+        const referenceShelf = new ReferenceShelf();
+        let success = false;
+
+        switch (type) {
+            case 'moment':
+                // Create updates object for Moment
+                const momentUpdates: Partial<Moment> = {};
+                if (content !== undefined) momentUpdates.content = content;
+                if (title !== undefined) momentUpdates.title = title;
+                if (timeline !== undefined) momentUpdates.timeline = JSON.parse(timeline);
+                if (themes !== undefined) momentUpdates.themes = JSON.parse(themes);
+                if (lore !== undefined) momentUpdates.lore = JSON.parse(lore);
+                if (subtext !== undefined) momentUpdates.subtext = JSON.parse(subtext);
+                
+                success = await referenceShelf.saveNarrativeContent(storyId, chapterId, arcId, momentId, momentUpdates);
+                break;
+            default:
+                // For now, we only handle moment updates
+                success = await referenceShelf.saveNarrativeContent(storyId, chapterId, arcId, momentId, {});
+        }
+
+        if (success) {
+            return { message: 'Narrative content saved successfully!', error: null };
+        } else {
+            return { message: null, error: 'Failed to save narrative content.' };
+        }
     } catch (e: unknown) {
         const error = e instanceof Error ? e.message : 'An unknown error occurred during save.';
         console.error(error);

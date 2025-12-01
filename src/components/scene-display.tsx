@@ -16,6 +16,7 @@ import SceneCard from './scene-card';
 import { Separator } from './ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Save } from 'lucide-react';
+import DreamweaverContentDisplay from './dreamweaver-content-display';
 
 interface SceneDisplayProps {
   formAction: (payload: FormData) => void;
@@ -127,31 +128,11 @@ export default function SceneDisplay({ formAction, formState, selectedItem, onSe
       return (
         <div className="space-y-6">
           {isLoadedFromSave && (
-            <div className="p-2 text-sm text-center bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-md">
+            <div className="p-2 text-sm text-center bg-blue-100 dark:bg-blue-90/50 text-blue-800 dark:text-blue-20 rounded-md">
                 Loaded previously saved scenes for this moment.
             </div>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {scenes.map((scene) => (
-              <SceneCard key={scene.sceneId} scene={scene} />
-            ))}
-          </div>
-
-          {branchOptions && branchOptions.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="font-semibold flex items-center gap-2 mb-2 text-sm"><Icons.chapter /> Branch Options</h4>
-                <div className="flex flex-wrap gap-2">
-                  {branchOptions.map((option, i) => (
-                    <Button key={i} variant="outline" size="sm" className="text-xs" onClick={() => handleBranchClick(option.targetMomentId)}>
-                      {option.prompt}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+          <DreamweaverContentDisplay item={selectedItem!} scenes={scenes} />
         </div>
       );
     }

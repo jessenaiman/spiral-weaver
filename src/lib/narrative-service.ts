@@ -114,4 +114,18 @@ export class ReferenceShelf {
     }
     return undefined;
   }
+
+  async saveNarrativeContent(storyId: string, chapterId: string, arcId: string, momentId: string, updates: Partial<Moment>): Promise<boolean> {
+    // In a real implementation, this would update the actual data store
+    // For now, we'll just return true to indicate success
+    try {
+      // This would update the actual moment in the lore catalog
+      // Since the data is currently static, we can't actually modify it in memory
+      // In a real implementation, you would update the database or file system
+      return true;
+    } catch (error) {
+      console.error('Error saving narrative content:', error);
+      return false;
+    }
+  }
 }

@@ -1,0 +1,10 @@
+{
+  "jest.jestCommandLine": "pnpm exec jest",
+  "jest.runMode": "on-demand",
+  "playwright.config": "playwright.config.ts",
+  "playwright.env": {
+    "NODE_ENV": "test"
+  },
+  "testing.openTesting": "openOnTestStart",
+  "testing.automaticallyOpenTestResults": "openOnTestStart"
+}

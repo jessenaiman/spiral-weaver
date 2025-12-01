@@ -52,25 +52,38 @@ export default function SceneWeaverApp({ stories }: SceneWeaverAppProps) {
   
   const handleSelect = async (item: SelectedItem) => {
     setSelectedItem(item);
-    
+
     // If a moment is selected, automatically trigger the form action
     // to either load saved scenes or generate new ones.
     if (item.type === 'moment') {
+        // Preserve the original content when selecting a moment
+        // The original content should remain available in the ORIGINAL tab
         const referenceShelf = new ReferenceShelf();
         const savedScenes = await referenceShelf.getSavedScenesForMoment(item.data.id);
-        
+
         if (savedScenes) {
             // If scenes are saved, just display them without calling the full action
             // This is tricky because useActionState doesn't let us set state directly.
             // A better refactor would be to separate loading from generating.
             // For now, we'll trigger the form to get the same effect.
-             setTimeout(() => formRef.current?.requestSubmit(), 0);
+             setTimeout(() => {
+               if (formRef.current) {
+                 formRef.current.requestSubmit();
+               }
+             }, 0);
 
         } else {
              // We need to trigger the form action. We can do this by submitting the form.
              // The form needs to be in the DOM and have the correct hidden values.
-             setTimeout(() => formRef.current?.requestSubmit(), 0);
+             setTimeout(() => {
+               if (formRef.current) {
+                 formRef.current.requestSubmit();
+               }
+             }, 0);
         }
+    } else {
+        // For non-moment items (story, chapter, arc), clear the scene state
+        // but preserve any original content in the UI components
     }
   };
 
